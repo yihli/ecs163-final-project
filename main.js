@@ -82,7 +82,10 @@ function drawMap({
 
             mapGroup.selectAll(".country-label")
                 // .style("display", d3.event.transform.k >= 2 ? "block" : "none")
-                .attr("font-size", d =>  Math.sqrt(path.area(d)) / 10);
+                .attr("font-size", d => Math.sqrt(path.area(d)) / 10);
+            mapGroup.selectAll(".operation-point")
+                .attr("r", 5 / d3.event.transform.k)
+                .attr("stroke-width", 0.5/d3.event.transform.k)
 
         });
 
@@ -124,7 +127,7 @@ function drawMap({
         .attr("class", "country-label")
         .attr("x", d => path.centroid(d)[0])
         .attr("y", d => path.centroid(d)[1])
-        .attr("font-size", d =>  Math.sqrt(path.area(d)) / 10)
+        .attr("font-size", d => Math.sqrt(path.area(d)) / 10)
         .attr("text-anchor", "middle")
         .attr("fill", "blue")
         .attr("pointer-events", "none")
@@ -138,7 +141,7 @@ function drawMap({
         .attr("class", "operation-point")
         .attr("cx", d => projection([+d.Longitude_Clean, +d.Latitude_Clean])[0])
         .attr("cy", d => projection([+d.Longitude_Clean, +d.Latitude_Clean])[1])
-        .attr("r", 2)
+        .attr("r", 3)
         .attr("fill", "red")
         .attr("stroke", "black")
         .attr("stroke-width", 0.5)
