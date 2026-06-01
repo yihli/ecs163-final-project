@@ -78,6 +78,12 @@ function drawMap({
         .scaleExtent([1, 8])
         .on("zoom", function () {
             mapGroup.attr("transform", d3.event.transform);
+
+
+            mapGroup.selectAll(".country-label")
+                // .style("display", d3.event.transform.k >= 2 ? "block" : "none")
+                .attr("font-size", d =>  Math.sqrt(path.area(d)) / 10);
+
         });
 
     svg.call(zoom);
@@ -102,7 +108,8 @@ function drawMap({
         .datum(borders)
         .attr("d", path)
         .attr("fill", "none")
-        .attr("stroke", "#000");
+        .attr("stroke", "#000")
+        .attr("stroke-width", "0.25px");
 
     mapGroup.append("path")
         .datum(outline)
@@ -117,10 +124,11 @@ function drawMap({
         .attr("class", "country-label")
         .attr("x", d => path.centroid(d)[0])
         .attr("y", d => path.centroid(d)[1])
-        .attr("font-size", 6)
+        .attr("font-size", d =>  Math.sqrt(path.area(d)) / 10)
         .attr("text-anchor", "middle")
-        .attr("fill", "#333")
+        .attr("fill", "blue")
         .attr("pointer-events", "none")
+        .style("display", "block")
         .text(d => d.properties.name || d.id);
 
     mapGroup.selectAll(".operation-point")
