@@ -1,0 +1,53 @@
+<!doctype html>
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<meta name="description" content="">
+	<title>D3 Example</title>
+	<link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+	<div id="app">
+
+		<aside id="sidebar">
+			<h1>US Military Operations</h1>
+
+			<label>Year</label>
+			<input id="year-slider" type="range" min="1989" max="2021" value="2021">
+			<div id="year-label-container">
+				<span id="year-label">1989-2021</span>
+				<button id="year-show-all-button">Filter by year</button>
+			</div>
+
+			<label>Terrain</label>
+			<select id="terrain-filter">
+				<option value="all">All</option>
+			</select>
+
+			<label>Modality</label>
+			<select id="modality-filter">
+				<option value="all">All</option>
+			</select>
+
+			<button id="reset-button">Reset</button>
+
+			<div id="details-panel">
+				<h2>Selected Operation</h2>
+				<p>Click a point on the map.</p>
+			</div>
+		</aside>
+
+		<main id="map-area">
+			<svg id="map-svg"></svg>
+		</main>
+
+	</div>
+
+	<script src="https://d3js.org/d3.v5.min.js"></script>
+	<script src="https://unpkg.com/topojson-client@3"></script>
+	<script src="main.js"></script>
+</body>
+
+</html>
