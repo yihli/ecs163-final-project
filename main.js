@@ -9,32 +9,30 @@ let year = -1
 let mapGroup
 let projection
 let dataPoints
+let zoomLevel = 1
 
 d3.select("#year-slider").on("input", function () {
-    const year = this.value;
+    year = event.target.value
     d3.select("#year-label").text(year);
+    updateOperationsPoints(dataPoints.filter(d => d["Year"] == year))
 });
 d3.select("#year-show-all-button").on("click", function () {
     if (year != - 1) {
         year = -1;
         d3.select("#year-label").text("All years");
-        d3.select("#year-slider").style("display", "none");
+        d3.select("#year-slider-container").style("display", "none");
         d3.select("#year-show-all-button").text("Filter by year")
         updateOperationsPoints(dataPoints)
     } else {
         year = 1989
         d3.select("#year-label").text("1989");
-        d3.select("#year-slider").style("display", "block");
+        d3.select("#year-slider-container").style("display", "flex");
         d3.select("#year-show-all-button").text("Show all years")
-        updateOperationsPoints(dataPoints.filter(d=>d["Year"] == year))
+        updateOperationsPoints(dataPoints.filter(d => d["Year"] == year))
     }
 });
 
 
-    document.getElementById("year-slider").addEventListener("change", function (event) {
-        year = event.target.value
-        updateOperationsPoints(dataPoints.filter(d=>d["Year"] == year))
-    })
 
 Promise.all([
     d3.json("countries-50m.json"),
@@ -85,6 +83,8 @@ function updateOperationsPoints(newOperations) {
 
     points.exit().remove();
 
+
+
     points.enter()
         .append("circle")
         .attr("class", "operation-point")
@@ -93,10 +93,11 @@ function updateOperationsPoints(newOperations) {
         .merge(points)
         .attr("cx", d => projection([+d.Longitude_Clean, +d.Latitude_Clean])[0])
         .attr("cy", d => projection([+d.Longitude_Clean, +d.Latitude_Clean])[1])
-        .attr("r", 3)
-                    .append("title")
-            .text(d =>
-                `${d.Operation}
+        .attr("r", 5 / zoomLevel)
+        .attr("stroke-width", 0.5 / zoomLevel)
+        .append("title")
+        .text(d =>
+            `${d.Operation}
     ${d.Parent}
     ${d.Year}
     Latitude: ${d.Latitude_Clean}
@@ -123,17 +124,23 @@ function drawMap({
     const zoom = d3.zoom()
         .scaleExtent([1, 50])
         .on("zoom", function () {
+            zoomLevel = d3.event.transform.k
+
             mapGroup.attr("transform", d3.event.transform);
 
             console.log(d3.event.transform)
+
+
+
 
 
             mapGroup.selectAll(".country-label")
                 // .style("display", d3.event.transform.k >= 2 ? "block" : "none")
                 .attr("font-size", d => Math.sqrt(path.area(d)) / 10);
             mapGroup.selectAll(".operation-point")
-                .attr("r", 5 / d3.event.transform.k)
-                .attr("stroke-width", 0.5 / d3.event.transform.k)
+                .attr("r", 5 / zoomLevel)
+                .attr("stroke-width", 0.5 / zoomLevel)
+
 
             if (d3.event.transform.k > 6) {
                 mapGroup.selectAll(".city")
