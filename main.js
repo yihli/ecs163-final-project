@@ -27,8 +27,12 @@ d3.select("#year-show-all-button").on("click", function () {
 
 Promise.all([
     d3.json("countries-50m.json"),
-    d3.csv("Military_Operations_Strategic_cleaned_coordinates.csv")
-]).then(([world, locations]) => {
+    d3.csv("Military_Operations_Strategic_cleaned_coordinates.csv"),
+    d3.json("rivers.geojson"),
+    d3.json("lakes.geojson"),
+    d3.json("urban_areas.csv"),
+    d3.json("ne_50m_populated_places.geojson")
+]).then(([world, locations, rivers, lakes, urban, populated]) => {
     const outline = { type: "Sphere" };
 
     const projection = d3.geoEqualEarth();
@@ -56,7 +60,11 @@ Promise.all([
         borders,
         countries,
         locations,
-        projection
+        projection,
+        rivers,
+        lakes,
+        urban,
+        populated
     });
 });
 
@@ -69,15 +77,21 @@ function drawMap({
     borders,
     countries,
     locations,
-    projection
+    projection,
+    rivers,
+    lakes,
+    urban,
+    populated
 }) {
     const mapGroup = svg.append("g")
         .attr("class", "map-group");
 
     const zoom = d3.zoom()
-        .scaleExtent([1, 8])
+        .scaleExtent([1, 50])
         .on("zoom", function () {
             mapGroup.attr("transform", d3.event.transform);
+
+            console.log(d3.event.transform)
 
 
             mapGroup.selectAll(".country-label")
@@ -85,7 +99,22 @@ function drawMap({
                 .attr("font-size", d => Math.sqrt(path.area(d)) / 10);
             mapGroup.selectAll(".operation-point")
                 .attr("r", 5 / d3.event.transform.k)
-                .attr("stroke-width", 0.5/d3.event.transform.k)
+                .attr("stroke-width", 0.5 / d3.event.transform.k)
+
+            if (d3.event.transform.k > 6) {
+                mapGroup.selectAll(".city")
+                    .style("display", "block")
+                // mapGroup.selectAll(".city text")
+
+                //     .attr("font-size", 10 / d3.event.transform.k + "px");
+
+                // mapGroup.selectAll(".city circle")
+
+                //     .attr("r", 5 / d3.event.transform.k);
+            } else {
+                mapGroup.selectAll(".city")
+                    .style("display", "none")
+            }
 
         });
 
@@ -94,7 +123,8 @@ function drawMap({
     mapGroup.append("path")
         .datum(outline)
         .attr("d", path)
-        .attr("fill", "#9ecae1");
+        .attr("fill", "#9ecae1")
+        ;
 
     mapGroup.append("path")
         .datum(graticule)
@@ -112,7 +142,8 @@ function drawMap({
         .attr("d", path)
         .attr("fill", "none")
         .attr("stroke", "#000")
-        .attr("stroke-width", "0.25px");
+        .attr("stroke-width", "0.25px")
+        .attr("opacity", "0.5");
 
     mapGroup.append("path")
         .datum(outline)
@@ -120,7 +151,39 @@ function drawMap({
         .attr("fill", "none")
         .attr("stroke", "#000");
 
-    mapGroup.selectAll(".country-label")
+
+
+    mapGroup.selectAll(".river")
+        .data(rivers.features)
+        .enter()
+        .append("path")
+        .attr("class", "river")
+        .attr("d", path)
+        .attr("fill", "none")
+        .attr("stroke", "#4292c6")
+        .attr("stroke-width", 0.25);
+
+    mapGroup.selectAll(".lake")
+        .data(lakes.features)
+        .enter()
+        .append("path")
+        .attr("class", "lake")
+        .attr("d", path)
+        .attr("fill", "#4292c6")
+        .attr("stroke", "#4292c6")
+        .attr("stroke-width", 0.25);
+
+    mapGroup.selectAll(".urban")
+        .data(urban.features)
+        .enter()
+        .append("path")
+        .attr("class", "urban")
+        .attr("d", path)
+        .attr("fill", "orange")
+        .attr("stroke", "orange")
+        .attr("stroke-width", 0.25);
+
+        mapGroup.selectAll(".country-label")
         .data(countries.features.filter(d => path.area(d) > 70))
         .enter()
         .append("text")
@@ -133,6 +196,27 @@ function drawMap({
         .attr("pointer-events", "none")
         .style("display", "block")
         .text(d => d.properties.name || d.id);
+
+    const populatedGroups = mapGroup.selectAll(".city")
+        .data(populated.features)
+        .enter()
+        .append("g")
+        .style("display", "none")
+        .attr("class", "city")
+        .attr("transform", d => {
+            const [x, y] = projection(d.geometry.coordinates);
+            return `translate(${x},${y})`;
+        });
+
+    populatedGroups.append("circle")
+        .attr("r", 0.5)
+        .attr("fill", "gray");
+
+    populatedGroups.append("text")
+        .attr("y", 2)
+        .attr("font-size", "1px")
+        .attr("text-anchor", "middle")
+        .text(d => d.properties.NAME);
 
     mapGroup.selectAll(".operation-point")
         .data(locations)
