@@ -6,6 +6,9 @@ const height = window.innerHeight;
 svg.attr("viewBox", `0 0 ${width} ${height}`);
 
 let year = -1
+let mapGroup
+let projection
+let dataPoints
 
 d3.select("#year-slider").on("input", function () {
     const year = this.value;
@@ -17,13 +20,21 @@ d3.select("#year-show-all-button").on("click", function () {
         d3.select("#year-label").text("All years");
         d3.select("#year-slider").style("display", "none");
         d3.select("#year-show-all-button").text("Filter by year")
+        updateOperationsPoints(dataPoints)
     } else {
         year = 1989
         d3.select("#year-label").text("1989");
         d3.select("#year-slider").style("display", "block");
         d3.select("#year-show-all-button").text("Show all years")
+        updateOperationsPoints(dataPoints.filter(d=>d["Year"] == year))
     }
 });
+
+
+    document.getElementById("year-slider").addEventListener("change", function (event) {
+        year = event.target.value
+        updateOperationsPoints(dataPoints.filter(d=>d["Year"] == year))
+    })
 
 Promise.all([
     d3.json("countries-50m.json"),
@@ -35,7 +46,9 @@ Promise.all([
 ]).then(([world, locations, rivers, lakes, urban, populated]) => {
     const outline = { type: "Sphere" };
 
-    const projection = d3.geoEqualEarth();
+    dataPoints = locations
+
+    projection = d3.geoEqualEarth();
     projection.fitSize([width, height], outline);
 
     const path = d3.geoPath(projection);
@@ -51,8 +64,6 @@ Promise.all([
 
     drawMap({
         svg,
-        width,
-        height,
         path,
         outline,
         graticule,
@@ -65,9 +76,32 @@ Promise.all([
         lakes,
         urban,
         populated
-    });
+    })
 });
 
+function updateOperationsPoints(newOperations) {
+    const points = mapGroup.selectAll(".operation-point")
+        .data(newOperations);
+
+    points.exit().remove();
+
+    points.enter()
+        .append("circle")
+        .attr("class", "operation-point")
+        .attr("fill", "red")
+        .attr("stroke", "black")
+        .merge(points)
+        .attr("cx", d => projection([+d.Longitude_Clean, +d.Latitude_Clean])[0])
+        .attr("cy", d => projection([+d.Longitude_Clean, +d.Latitude_Clean])[1])
+        .attr("r", 3)
+                    .append("title")
+            .text(d =>
+                `${d.Operation}
+    ${d.Parent}
+    ${d.Year}
+    Latitude: ${d.Latitude_Clean}
+    Longitude: ${d.Longitude_Clean}`);
+}
 function drawMap({
     svg,
     path,
@@ -83,7 +117,7 @@ function drawMap({
     urban,
     populated
 }) {
-    const mapGroup = svg.append("g")
+    mapGroup = svg.append("g")
         .attr("class", "map-group");
 
     const zoom = d3.zoom()
@@ -183,7 +217,7 @@ function drawMap({
         .attr("stroke", "orange")
         .attr("stroke-width", 0.25);
 
-        mapGroup.selectAll(".country-label")
+    mapGroup.selectAll(".country-label")
         .data(countries.features.filter(d => path.area(d) > 70))
         .enter()
         .append("text")
@@ -218,23 +252,24 @@ function drawMap({
         .attr("text-anchor", "middle")
         .text(d => d.properties.NAME);
 
-    mapGroup.selectAll(".operation-point")
-        .data(locations)
-        .enter()
-        .append("circle")
-        .attr("class", "operation-point")
-        .attr("cx", d => projection([+d.Longitude_Clean, +d.Latitude_Clean])[0])
-        .attr("cy", d => projection([+d.Longitude_Clean, +d.Latitude_Clean])[1])
-        .attr("r", 3)
-        .attr("fill", "red")
-        .attr("stroke", "black")
-        .attr("stroke-width", 0.5)
-        .append("title")
-        .text(d =>
-            `${d.Operation}
-${d.Parent}
-${d.Year}
-Latitude: ${d.Latitude_Clean}
-Longitude: ${d.Longitude_Clean}`
-        );
+    //     mapGroup.selectAll(".operation-point")
+    //         .data(locations)
+    //         .enter()
+    //         .append("circle")
+    //         .attr("class", "operation-point")
+    //         .attr("cx", d => projection([+d.Longitude_Clean, +d.Latitude_Clean])[0])
+    //         .attr("cy", d => projection([+d.Longitude_Clean, +d.Latitude_Clean])[1])
+    //         .attr("r", 3)
+    //         .attr("fill", "red")
+    //         .attr("stroke", "black")
+    //         .attr("stroke-width", 0.5)
+    //         .append("title")
+    //         .text(d =>
+    //             `${d.Operation}
+    // ${d.Parent}
+    // ${d.Year}
+    // Latitude: ${d.Latitude_Clean}
+    // Longitude: ${d.Longitude_Clean}`
+    //         );
+    updateOperationsPoints(locations)
 }
