@@ -66,6 +66,13 @@ button {
     width: auto;
 }
 
-#year-slider {
-    display: none;
+
+#year-slider-container {
+  display: none;
+  flex-direction: row;
+}
+
+.year-increment {
+  width: 5px;
+  text-align: center;
 }
