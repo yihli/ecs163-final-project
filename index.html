@@ -11,16 +11,16 @@
 <body>
 	<div id="app">
 
-		<aside id="sidebar">
-			<h1>US Military Operations</h1>
+		<aside id="filter-sidebar">
+			<h2>US Military Operations</h2>
 
 			<label>Year</label>
 			<div id="year-slider-container">
-				
+
 				<input id="year-slider" type="range" min="1989" max="2021" value="2021">
-		
+
 			</div>
-			
+
 			<div id="year-label-container">
 				<span id="year-label">1989-2021</span>
 				<button id="year-show-all-button">Filter by year</button>
@@ -47,8 +47,12 @@
 		<main id="map-area">
 			<svg id="map-svg"></svg>
 		</main>
+		<aside id="deepdive-sidebar">
 
+		</aside>
 	</div>
+
+
 
 	<script src="https://d3js.org/d3.v5.min.js"></script>
 	<script src="https://unpkg.com/topojson-client@3"></script>
