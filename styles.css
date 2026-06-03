@@ -295,3 +295,36 @@ button:hover {
 .op-tag.terrain {
   background: #8a7c4e;
 }
+
+#casualty-legend,
+#casualty-size-legend {
+  display: none;
+}
+
+button.active {
+  background: #b4231c;
+}
+
+#legend-color-bar {
+  width: 120px;
+  height: 10px;
+  margin-top: 6px;
+  background: linear-gradient(to right, #ffffb2, #fecc5c, #fd8d3c, #f03b20, #bd0026);
+}
+
+#legend-color-labels {
+  display: flex;
+  justify-content: space-between;
+  width: 120px;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 9px;
+  color: #5c5b4e;
+  margin-top: 2px;
+}
+
+.legend-note {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 9px;
+  color: #8a8070;
+  margin-top: 4px;
+}
