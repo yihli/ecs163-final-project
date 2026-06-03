@@ -1,51 +1,174 @@
 html,
 body {
   width: 100%;
-  height: 100%;
+  min-height: 100%;
   margin: 0;
-  font-family: Arial, sans-serif;
+  font-family: "Barlow", Arial, sans-serif;
 }
 
 #app {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   width: 100%;
-  height: 100%;
+  min-height: 100vh;
+}
+
+#command-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 62px;
+  flex: 0 0 62px;
+  padding: 0 22px;
+  background: #23261c;
+  color: #e9e3d5;
+  border-bottom: 3px solid #b4231c;
+}
+
+.cb-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.cb-emblem {
+  width: 20px;
+  height: 20px;
+  background: #b4231c;
+  transform: rotate(45deg);
+  border: 2px solid #e9e3d5;
+  flex: 0 0 auto;
+}
+
+#command-bar h1 {
+  font-family: "Oswald", sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.cb-sub {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #a9a48f;
+}
+
+.cb-meta {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.cb-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.cb-stat span:first-child {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #8f8b76;
+}
+
+.cb-stat span:last-child {
+  font-family: "Oswald", sans-serif;
+  font-size: 17px;
+}
+
+.cb-classification {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  background: #c9b96f;
+  color: #23261c;
+  padding: 5px 10px;
+}
+
+#control-strip {
+  display: flex;
+  flex: 0 0 auto;
+  background: #e9e3d5;
+  border-bottom: 1px solid #c7bb9c;
 }
 
 #filter-sidebar {
-  width: 180px;
-  height: 100%;
-  padding: 20px;
-  background: #f3f3f3;
-  border-right: 1px solid #ccc;
+  flex: 1;
+  padding: 10px 20px;
+  border-right: 1px solid #c7bb9c;
   box-sizing: border-box;
+}
+
+#filter-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.filter-group label {
+  margin-top: 0;
+}
+
+.filter-actions {
+  flex-direction: row;
+  gap: 8px;
+}
+
+.filter-actions button {
+  width: auto;
+  margin-top: 0;
 }
 
 #deepdive-sidebar {
-  width: 180px;
-  height: 100%;
-  padding: 20px;
-  background: #f3f3f3;
-  border-right: 1px solid #ccc;
+  flex: 2;
+  padding: 10px 20px;
   box-sizing: border-box;
+  overflow: hidden;
+}
+
+#filter-sidebar h2,
+#deepdive-sidebar h2 {
+  font-family: "Oswald", sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #3a3e2c;
+  margin: 0 0 10px;
 }
 
 #map-area {
-  flex: 1;
-  height: 100%;
+  flex: 0 0 100vh;
+  overflow: hidden;
 }
 
 #map-svg {
   width: 100%;
   height: 100%;
   display: block;
+  overflow: hidden;
 }
 
 label {
   display: block;
-  margin-top: 18px;
-  font-weight: bold;
+  margin-top: 12px;
+  font-family: "Oswald", sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #5c5b4e;
 }
 
 input,
@@ -54,31 +177,121 @@ button {
   width: 100%;
   margin-top: 6px;
   box-sizing: border-box;
+  font-family: "Barlow", sans-serif;
+  font-size: 13px;
 }
 
-#details-panel {
-  margin-top: 25px;
-  border-top: 1px solid #ccc;
-  padding-top: 12px;
+select {
+  padding: 6px 8px;
+  border: 1px solid #c7bb9c;
+  max-width: 200px;
+}
+
+button {
+  font-family: "Oswald", sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 7px 10px;
+  background: #23261c;
+  color: #e9e3d5;
+  border: none;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #3a3e2c;
 }
 
 #year-label-container {
   display: flex;
   align-items: center;
-  width: 100%;
+  gap: 8px;
+}
+
+#year-label {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 14px;
 }
 
 #year-show-all-button {
   width: auto;
+  background: transparent;
+  color: #3a3e2c;
+  border: 1px solid #c7bb9c;
 }
 
+#year-show-all-button:hover {
+  background: #23261c;
+  color: #e9e3d5;
+}
 
 #year-slider-container {
   display: none;
   flex-direction: row;
 }
 
-.year-increment {
-  width: 5px;
-  text-align: center;
+#reset-button {
+  max-width: 120px;
+}
+
+#details-panel {
+  overflow-y: auto;
+}
+
+.details-empty {
+  font-size: 13px;
+  color: #5c5b4e;
+  margin: 0;
+}
+
+.op-name {
+  font-family: "Oswald", sans-serif;
+  font-size: 19px;
+  font-weight: 600;
+}
+
+.op-parent {
+  font-size: 12px;
+  color: #5c5b4e;
+  font-style: italic;
+  margin-bottom: 8px;
+}
+
+.op-rows {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 22px;
+}
+
+.op-row .k {
+  font-family: "Oswald", sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #5c5b4e;
+}
+
+.op-row .v {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 13px;
+}
+
+.op-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.op-tag {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  padding: 3px 7px;
+  background: #23261c;
+  color: #e9e3d5;
+}
+
+.op-tag.terrain {
+  background: #8a7c4e;
 }
