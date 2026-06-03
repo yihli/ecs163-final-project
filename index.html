@@ -1,62 +1,82 @@
 <!doctype html>
 <html>
-
 <head>
-	<meta charset="utf-8">
-	<meta name="description" content="">
-	<title>D3 Example</title>
-	<link rel="stylesheet" href="styles.css">
+  <meta charset="utf-8">
+  <title>US Military Operations</title>
+  <!-- added: fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600&family=Barlow&family=JetBrains+Mono&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
 </head>
-
 <body>
-	<div id="app">
+<div id="app">
 
-		<aside id="filter-sidebar">
-			<h2>US Military Operations</h2>
+  <!-- added: command bar -->
+  <header id="command-bar">
+    <div class="cb-brand">
+      <span class="cb-emblem"></span>
+      <div>
+        <h1>US Military Operations</h1>
+        <span class="cb-sub">Strategic Operations Database</span>
+      </div>
+    </div>
+    <div class="cb-meta">
+      <div class="cb-stat"><span>Records</span><span id="record-count">—</span></div>
+      <div class="cb-stat"><span>Coverage</span><span>1989–2021</span></div>
+      <span class="cb-classification">UNCLASSIFIED</span>
+    </div>
+  </header>
 
-			<label>Year</label>
-			<div id="year-slider-container">
+  <!-- added: control-strip wrapper (sidebars now horizontal) -->
+  <div id="control-strip">
+    <aside id="filter-sidebar">
+      <h2>Controls</h2>
+      <div id="filter-controls">
+        <div class="filter-group">
+          <label>Year</label>
+          <div id="year-label-container">
+            <span id="year-label">1989–2021</span>
+            <button id="year-show-all-button">Filter by year</button>
+          </div>
+          <div id="year-slider-container">
+            <input id="year-slider" type="range" min="1989" max="2021" value="2021">
+          </div>
+        </div>
 
-				<input id="year-slider" type="range" min="1989" max="2021" value="2021">
+        <div class="filter-group">
+          <label>Terrain</label>
+          <select id="terrain-filter"><option value="all">All</option></select>
+        </div>
 
-			</div>
+        <div class="filter-group">
+          <label>Modality</label>
+          <select id="modality-filter"><option value="all">All</option></select>
+        </div>
 
-			<div id="year-label-container">
-				<span id="year-label">1989-2021</span>
-				<button id="year-show-all-button">Filter by year</button>
-			</div>
+        <div class="filter-group filter-actions">
+          <button id="reset-button">Reset</button>
+          <button id="jump-to-map-btn">Jump to Map</button>
+        </div>
+      </div>
+    </aside>
 
-			<label>Terrain</label>
-			<select id="terrain-filter">
-				<option value="all">All</option>
-			</select>
+    <!-- changed: details-panel moved here from filter-sidebar -->
+    <aside id="deepdive-sidebar">
+      <h2>Selected Operation</h2>
+      <div id="details-panel">
+        <p class="details-empty">Click a point on the map.</p>
+      </div>
+    </aside>
+  </div>
 
-			<label>Modality</label>
-			<select id="modality-filter">
-				<option value="all">All</option>
-			</select>
+  <main id="map-area">
+    <svg id="map-svg"></svg>
+  </main>
 
-			<button id="reset-button">Reset</button>
-
-			<div id="details-panel">
-				<h2>Selected Operation</h2>
-				<p>Click a point on the map.</p>
-			</div>
-		</aside>
-
-		<main id="map-area">
-			<svg id="map-svg"></svg>
-		</main>
-		<aside id="deepdive-sidebar">
-
-		</aside>
-	</div>
-
-
-
-	<script src="https://d3js.org/d3.v5.min.js"></script>
-	<script src="https://unpkg.com/topojson-client@3"></script>
-	<script src="main.js"></script>
+</div>
+<script src="https://d3js.org/d3.v5.min.js"></script>
+<script src="https://unpkg.com/topojson-client@3"></script>
+<script src="main.js"></script>
 </body>
-
 </html>
