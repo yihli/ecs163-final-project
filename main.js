@@ -10,6 +10,10 @@ let mapGroup
 let projection
 let dataPoints
 let zoomLevel = 1
+let casualtyMode = false
+let maxTotalCasualties = 1
+const casualtySizeScale = d3.scaleSqrt().range([5, 25])
+const civilianRatioColorScale = d3.scaleSequential(d3.interpolateYlOrRd).domain([0, 1])
 
 d3.select("#year-slider").on("input", function () {
     year = event.target.value
@@ -32,6 +36,13 @@ d3.select("#year-show-all-button").on("click", function () {
     }
 });
 
+d3.select("#casualty-toggle").on("click", function () {
+    casualtyMode = !casualtyMode
+    d3.select(this).classed("active", casualtyMode)
+    d3.select("#casualty-legend").style("display", casualtyMode ? "block" : "none")
+    updateOperationsPoints(year === -1 ? dataPoints : dataPoints.filter(d => d["Year"] == year))
+})
+
 
 
 Promise.all([
@@ -45,6 +56,10 @@ Promise.all([
     const outline = { type: "Sphere" };
 
     dataPoints = locations
+
+    maxTotalCasualties = d3.max(locations, d => (+d["Side A casualties"] || 0) + (+d["Side B casualties"] || 0) + (+d["Civilian casualties"] || 0)) || 1
+    casualtySizeScale.domain([0, maxTotalCasualties])
+    drawSizeLegend()
 
     projection = d3.geoEqualEarth();
     projection.fitSize([width, height], outline);
@@ -77,32 +92,52 @@ Promise.all([
     })
 });
 
+function parseCasualties(d) {
+    const sideA = +d["Side A casualties"] || 0
+    const sideB = +d["Side B casualties"] || 0
+    const civilian = +d["Civilian casualties"] || 0
+    const us = +d["US casualties"] || 0
+    const hasData = d["Side A casualties"] !== "" || d["Side B casualties"] !== "" || d["Civilian casualties"] !== "" || d["US casualties"] !== ""
+    const total = sideA + sideB + civilian
+    const ratio = total > 0 ? civilian / total : 0
+    return { sideA, sideB, civilian, us, total, ratio, hasData }
+}
+
+function getCasualtyFill(d) {
+    const { hasData, ratio } = parseCasualties(d)
+    return hasData ? civilianRatioColorScale(ratio) : "#999"
+}
+
 function updateOperationsPoints(newOperations) {
     const points = mapGroup.selectAll(".operation-point")
-        .data(newOperations);
+        .data(newOperations)
 
-    points.exit().remove();
+    points.exit().remove()
 
-
-
-    points.enter()
+    const merged = points.enter()
         .append("circle")
         .attr("class", "operation-point")
-        .attr("fill", "red")
         .attr("stroke", "black")
         .merge(points)
+
+    merged
         .attr("cx", d => projection([+d.Longitude_Clean, +d.Latitude_Clean])[0])
         .attr("cy", d => projection([+d.Longitude_Clean, +d.Latitude_Clean])[1])
-        .attr("r", 5 / zoomLevel)
+        .attr("r", d => casualtyMode ? casualtySizeScale(parseCasualties(d).total) / zoomLevel : 5 / zoomLevel)
+        .attr("fill", d => casualtyMode ? getCasualtyFill(d) : "red")
         .attr("stroke-width", 0.5 / zoomLevel)
-        .append("title")
-        .text(d =>
-            `${d.Operation}
-    ${d.Parent}
-    ${d.Year}
-    Latitude: ${d.Latitude_Clean}
-    Longitude: ${d.Longitude_Clean}`);
+        .attr("opacity", casualtyMode ? 0.8 : 1)
+
+    merged.selectAll("title").remove()
+    merged.append("title")
+        .text(d => {
+            const { sideA, sideB, civilian, us } = parseCasualties(d)
+            return casualtyMode
+                ? `${d.Operation}\n${d.Parent}\n${d.Year}\nSide A: ${sideA}  Side B: ${sideB}\nCivilian: ${civilian}  US: ${us}`
+                : `${d.Operation}\n${d.Parent}\n${d.Year}\nLatitude: ${d.Latitude_Clean}\nLongitude: ${d.Longitude_Clean}`
+        })
 }
+
 function drawMap({
     svg,
     path,
@@ -130,15 +165,11 @@ function drawMap({
 
             console.log(d3.event.transform)
 
-
-
-
-
             mapGroup.selectAll(".country-label")
                 // .style("display", d3.event.transform.k >= 2 ? "block" : "none")
                 .attr("font-size", d => Math.sqrt(path.area(d)) / 10);
             mapGroup.selectAll(".operation-point")
-                .attr("r", 5 / zoomLevel)
+                .attr("r", d => casualtyMode ? casualtySizeScale(parseCasualties(d).total) / zoomLevel : 5 / zoomLevel)
                 .attr("stroke-width", 0.5 / zoomLevel)
 
 
@@ -279,4 +310,33 @@ function drawMap({
     // Longitude: ${d.Longitude_Clean}`
     //         );
     updateOperationsPoints(locations)
+}
+
+function drawSizeLegend() {
+    const sizeSvg = d3.select("#legend-size")
+    const ticks = [
+        Math.max(1, Math.round(maxTotalCasualties * 0.01)),
+        Math.round(maxTotalCasualties * 0.1),
+        maxTotalCasualties
+    ]
+    const baseline = 40
+    let cx = 8
+    ticks.forEach(val => {
+        const r = casualtySizeScale(val)
+        sizeSvg.append("circle")
+            .attr("cx", cx + r)
+            .attr("cy", baseline - r)
+            .attr("r", r)
+            .attr("fill", "none")
+            .attr("stroke", "#555")
+            .attr("stroke-width", 0.5)
+        sizeSvg.append("text")
+            .attr("x", cx + r)
+            .attr("y", baseline + 10)
+            .attr("text-anchor", "middle")
+            .attr("font-size", "9px")
+            .attr("fill", "#555")
+            .text(val >= 1000 ? `${Math.round(val / 1000)}k` : val)
+        cx += r * 2 + 10
+    })
 }

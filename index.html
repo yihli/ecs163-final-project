@@ -38,6 +38,21 @@
 
 			<button id="reset-button">Reset</button>
 
+			<label>Display</label>
+			<button id="casualty-toggle">Casualty View</button>
+
+			<div id="casualty-legend">
+				<span class="legend-label">Size: total casualties</span>
+				<svg id="legend-size" width="140" height="55"></svg>
+				<span class="legend-label">Color: civilian ratio</span>
+				<div id="legend-color-bar"></div>
+				<div id="legend-color-labels">
+					<span>Military</span>
+					<span>Civilian</span>
+				</div>
+				<span class="legend-note">Gray = no data</span>
+			</div>
+
 			<div id="details-panel">
 				<h2>Selected Operation</h2>
 				<p>Click a point on the map.</p>

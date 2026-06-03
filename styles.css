@@ -82,3 +82,44 @@ button {
   width: 5px;
   text-align: center;
 }
+
+#casualty-legend {
+  display: none;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #ccc;
+}
+
+.legend-label {
+  display: block;
+  font-size: 11px;
+  color: #555;
+  margin-top: 8px;
+}
+
+.legend-note {
+  display: block;
+  font-size: 10px;
+  color: #888;
+  margin-top: 4px;
+}
+
+#legend-color-bar {
+  height: 10px;
+  margin-top: 4px;
+  background: linear-gradient(to right, #ffffb2, #fecc5c, #fd8d3c, #f03b20, #bd0026);
+}
+
+#legend-color-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  color: #555;
+  margin-top: 2px;
+}
+
+button.active {
+  background-color: #4292c6;
+  color: white;
+  border-color: #2171b5;
+}
