@@ -66,7 +66,7 @@ d3.select("#reset-button").on("click", function () {
 
 Promise.all([
     d3.json("countries-50m.json"),
-    d3.csv("Military_Operations_Strategic_cleaned_coordinates.csv"),
+    d3.csv("Military_Operations_Strategic_cleaned_version.csv"),
     d3.json("rivers.geojson").catch(() => ({ type: "FeatureCollection", features: [] })),
     d3.json("lakes.geojson").catch(() => ({ type: "FeatureCollection", features: [] })),
     d3.json("urban_areas.geojson").catch(() => ({ type: "FeatureCollection", features: [] })),
