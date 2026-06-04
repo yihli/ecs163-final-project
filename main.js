@@ -200,7 +200,7 @@ function drawMap({ svg, path, outline, graticule, land, borders, countries, loca
             zoomLevel = d3.event.transform.k;
             mapGroup.attr("transform", d3.event.transform);
             mapGroup.selectAll(".country-label").attr("font-size", d => Math.sqrt(path.area(d)) / 10);
-            mapGroup.selectAll(".city").style("display", d3.event.transform.k > 6 ? "block" : "none");
+            mapGroup.selectAll(".city").style("display", d3.event.transform.k > 15 ? "block" : "none");
             highlightSelected();  // added: keep highlight in sync on zoom
         });
 
@@ -244,8 +244,8 @@ function drawMap({ svg, path, outline, graticule, land, borders, countries, loca
             return `translate(${x},${y})`;
         });
 
-    cityGroups.append("circle").attr("r", 0.5).attr("fill", "gray");
-    cityGroups.append("text").attr("y", 2).attr("font-size", "1px").attr("text-anchor", "middle").text(d => d.city_name);
+    cityGroups.append("circle").attr("r", 0.25).attr("fill", "gray");
+    cityGroups.append("text").attr("y", 0.5).attr("font-size", "0.25px").attr("text-anchor", "middle").text(d => d.city_name);
 
     updateOperationsPoints(locations);
 }

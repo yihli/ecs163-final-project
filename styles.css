@@ -328,3 +328,9 @@ button.active {
   color: #8a8070;
   margin-top: 4px;
 }
+
+#map-controls-guide {
+  position: fixed;
+  left: 10px;
+  bottom: 10px
+}
