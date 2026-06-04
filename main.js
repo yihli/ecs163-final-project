@@ -191,14 +191,15 @@ function showOperationDetails(d) {
         console.log("hello")
         if (showingAdvancedDetailsView) {
             d3.select("#map-area").style("display", "block")
-            d3.select("adv-details-area").style("display", "none")
+            d3.select("#adv-details-area").style("display", "none")
             d3.select("#advanced-button").text("Advanced Analysis Available")
         } else {
             d3.select("#map-area").style("display", "none")
             d3.select("#advanced-button").text("Hide Advanced Analysis")
-            d3.select("adv-details-area").style("display", "block")
+            d3.select("#adv-details-area").style("display", "flex")
             renderModalityTable();
             renderCasualtiesBarChart();
+            renderParentDurationBox();
         }
         showingAdvancedDetailsView = !showingAdvancedDetailsView
     });
@@ -397,4 +398,63 @@ function renderCasualtiesBarChart() {
         .attr("dominant-baseline", "middle")
         .text(d => d.value);
 
+}
+
+function renderParentDurationBox() {
+    d3.select("#duration-chart").remove();
+
+    const operation = dataPoints.find(d => d.ID === selectedId)
+
+    const parentDuration = +operation["parent_duration"];
+    const opStart = +operation["Days into parent"] || 0;
+    const opDuration = +operation["Duration (days)"] || 0;
+
+    if (!parentDuration) return;
+
+    const width = 500;
+    const height = 70;
+    const margin = { top: 20, right: 20, bottom: 20, left: 20 };
+
+    const svg = d3.select("#adv-details-area")
+        .append("svg")
+        .attr("id", "duration-chart")
+        .attr("width", width)
+        .attr("height", height);
+
+    const innerWidth = width - margin.left - margin.right;
+
+    const x = d3.scaleLinear()
+        .domain([0, parentDuration])
+        .range([0, innerWidth]);
+
+    const g = svg.append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    // overall duration box
+    g.append("rect")
+        .attr("x", 0)
+        .attr("y", 10)
+        .attr("width", innerWidth)
+        .attr("height", 24)
+        .attr("fill", "none")
+        .attr("stroke", "black");
+
+    // inner box represents the specific operation length
+    g.append("rect")
+        .attr("x", x(opStart))
+        .attr("y", 14)
+        .attr("width", x(opDuration))
+        .attr("height", 16)
+        .attr("fill", "black");
+
+    // labels
+    g.append("text")
+        .attr("x", 0)
+        .attr("y", 8)
+        .text(operation.Parent + '(' + operation.parent_duration + ' days)');
+
+    g.append("text")
+        .attr("x", 0)
+        .attr("y", 50)
+        .text('Occurred ' + +operation["Days into parent"] + ' days in');
 }

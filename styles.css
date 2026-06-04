@@ -345,10 +345,9 @@ button.active {
 
 #adv-details-area {
   height: 100px;
-  width: 100px;
+  width: 100%;
   background-color: green;
+  display: flex;
+  flex-direction: row;
 }
 
-#adv-details-area {
-  display: flex;
-}
