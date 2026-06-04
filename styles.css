@@ -342,3 +342,9 @@ button.active {
 .op-advanced:hover {
   background-color: green;
 }
+
+#adv-details-area {
+  height: 100px;
+  width: 100px;
+  background-color: green;
+}

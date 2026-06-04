@@ -190,8 +190,13 @@ function showOperationDetails(d) {
         console.log("hello")
         if (showingAdvancedDetailsView) {
             d3.select("#map-area").style("display", "block")
+            d3.select("adv-details-area").style("display", "none")
+            d3.select("#advanced-button").text("Advanced Analysis Available")
         } else {
             d3.select("#map-area").style("display", "none")
+            d3.select("#advanced-button").text("Hide Advanced Analysis")
+    d3.select("adv-details-area").style("display", "block")
+
         }
         showingAdvancedDetailsView = !showingAdvancedDetailsView
     });
