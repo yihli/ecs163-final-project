@@ -66,7 +66,7 @@ d3.select("#reset-button").on("click", function () {
 
 Promise.all([
     d3.json("countries-50m.json"),
-    d3.csv("Military_Operations_Strategic_cleaned_version.csv"),
+    d3.csv("Military_Operations_Strategic_cleaned_version_2.csv"),
     d3.json("rivers.geojson").catch(() => ({ type: "FeatureCollection", features: [] })),
     d3.json("lakes.geojson").catch(() => ({ type: "FeatureCollection", features: [] })),
     d3.json("urban_areas.geojson").catch(() => ({ type: "FeatureCollection", features: [] })),
@@ -74,6 +74,7 @@ Promise.all([
 ]).then(([world, locations, rivers, lakes, urban, cities]) => {
     const outline = { type: "Sphere" };
 
+    console.log(locations)
     dataPoints = locations;
     d3.select("#record-count").text(locations.length);  // added: record count
     maxTotalCasualties = d3.max(locations, d => (+d["Side A casualties"] || 0) + (+d["Side B casualties"] || 0) + (+d["Civilian casualties"] || 0)) || 1;
@@ -195,8 +196,9 @@ function showOperationDetails(d) {
         } else {
             d3.select("#map-area").style("display", "none")
             d3.select("#advanced-button").text("Hide Advanced Analysis")
-    d3.select("adv-details-area").style("display", "block")
-
+            d3.select("adv-details-area").style("display", "block")
+            renderModalityTable();
+            renderCasualtiesBarChart();
         }
         showingAdvancedDetailsView = !showingAdvancedDetailsView
     });
@@ -296,4 +298,103 @@ function drawSizeLegend() {
             .text(val >= 1000 ? `${Math.round(val / 1000)}k` : val);
         cx += r * 2 + 8;
     });
+}
+
+function renderModalityTable() {
+    const operation = dataPoints.find(d => d.ID === selectedId)
+
+    const modalities = [
+        "Drones",
+        "Air to air",
+        "Cruise missiles",
+        "Aerial bombing",
+        "Close air support",
+        "Ground troops",
+        "Paramil"
+    ];
+
+    d3.select("#modality-table").remove();
+
+    const table = d3.select("#modalities-table")
+        .append("table")
+        .attr("id", "modality-table");
+
+    const rows = table.selectAll("tr")
+        .data(modalities)
+        .enter()
+        .append("tr");
+
+    rows.append("td")
+        .text(d => d);
+
+    rows.append("td")
+        .text(d => operation[d] == 1 ? "Used" : "Unused");
+}
+
+function renderCasualtiesBarChart() {
+    const operation = dataPoints.find(d => d.ID === selectedId)
+    d3.select("#casualty-breakdown").remove();
+ 
+    const data = [
+        { label: "Side A", value: +operation["US + Allies casualties"] || 0 },
+        { label: "Side B", value: +operation["Opposing Forces casualties"] || 0 },
+        { label: "Civilian", value: +operation["Civilian casualties"] || 0 },
+        { label: "US", value: +operation["US casualties"] || 0 }
+    ];
+
+    const width = 300;
+    const height = 120;
+    const margin = { top: 10, right: 40, bottom: 10, left: 80 };
+
+    const svg = d3.select("#casualties-chart")
+        .append("svg")
+        .attr("id", "casualty-breakdown")
+        .attr("width", width)
+        .attr("height", height);
+
+    const innerWidth = width - margin.left - margin.right;
+    const innerHeight = height - margin.top - margin.bottom;
+
+    const g = svg.append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    const x = d3.scaleLinear()
+        .domain([0, d3.max(data, d => d.value) || 1])
+        .range([0, innerWidth]);
+
+    const y = d3.scaleBand()
+        .domain(data.map(d => d.label))
+        .range([0, innerHeight])
+        .padding(0.2);
+
+    g.selectAll("rect")
+        .data(data)
+        .enter()
+        .append("rect")
+        .attr("x", 0)
+        .attr("y", d => y(d.label))
+        .attr("width", d => x(d.value))
+        .attr("height", y.bandwidth());
+
+    g.selectAll(".label")
+        .data(data)
+        .enter()
+        .append("text")
+        .attr("class", "label")
+        .attr("x", -8)
+        .attr("y", d => y(d.label) + y.bandwidth() / 2)
+        .attr("text-anchor", "end")
+        .attr("dominant-baseline", "middle")
+        .text(d => d.label);
+
+    g.selectAll(".value")
+        .data(data)
+        .enter()
+        .append("text")
+        .attr("class", "value")
+        .attr("x", d => x(d.value) + 5)
+        .attr("y", d => y(d.label) + y.bandwidth() / 2)
+        .attr("dominant-baseline", "middle")
+        .text(d => d.value);
+
 }

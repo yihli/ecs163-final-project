@@ -348,3 +348,7 @@ button.active {
   width: 100px;
   background-color: green;
 }
+
+#adv-details-area {
+  display: flex;
+}
