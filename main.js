@@ -19,6 +19,7 @@ let casualtyMode = false;
 let maxTotalCasualties = 1;
 const casualtySizeScale = d3.scaleSqrt().range([5, 25]);
 const civilianRatioColorScale = d3.scaleSequential(d3.interpolateYlOrRd).domain([0, 1]);
+let showingAdvancedDetailsView = false
 
 d3.select("#year-slider").on("input", function () {
     year = event.target.value;
@@ -157,10 +158,10 @@ function highlightSelected() {
 }
 
 // added: details panel helpers
-const MODALITIES = [["Drones","Drones"],["Air to air","Air-to-air"],["Cruise missiles","Cruise missiles"],["Aerial bombing","Aerial bombing"],["Close air support","Close air support"],["Ground troops","Ground troops"],["Paramil","Paramilitary"]];
-const TERRAINS = [["Urban","Urban"],["Forest","Forest"],["Mountain","Mountain"]];
+const MODALITIES = [["Drones", "Drones"], ["Air to air", "Air-to-air"], ["Cruise missiles", "Cruise missiles"], ["Aerial bombing", "Aerial bombing"], ["Close air support", "Close air support"], ["Ground troops", "Ground troops"], ["Paramil", "Paramilitary"]];
+const TERRAINS = [["Urban", "Urban"], ["Forest", "Forest"], ["Mountain", "Mountain"]];
 
-function esc(s) { return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function esc(s) { return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 function row(k, v) { return (v && v !== "NaN") ? `<div class="op-row"><span class="k">${esc(k)}</span><span class="v">${esc(v)}</span></div>` : ""; }
 
 function clearDetails() {
@@ -172,8 +173,8 @@ function clearDetails() {
 function showOperationDetails(d) {
     const coords = `${(+d.Latitude_Clean).toFixed(3)}, ${(+d.Longitude_Clean).toFixed(3)}`;
     const dates = (d.Start && d.End) ? `${d.Start} → ${d.End}` : (d.Start || "");
-    const modTags = MODALITIES.filter(([col]) => String(d[col]).trim() === "1").map(([,lbl]) => `<span class="op-tag">${esc(lbl)}</span>`).join("");
-    const terrTags = TERRAINS.filter(([col]) => String(d[col]).trim() === "1").map(([,lbl]) => `<span class="op-tag terrain">${esc(lbl)}</span>`).join("");
+    const modTags = MODALITIES.filter(([col]) => String(d[col]).trim() === "1").map(([, lbl]) => `<span class="op-tag">${esc(lbl)}</span>`).join("");
+    const terrTags = TERRAINS.filter(([col]) => String(d[col]).trim() === "1").map(([, lbl]) => `<span class="op-tag terrain">${esc(lbl)}</span>`).join("");
     d3.select("#details-panel").html(`
         <div class="op-name">${esc(d.Operation)}</div>
         <div class="op-parent">${d.Parent && d.Parent !== d.Operation ? "Part of " + esc(d.Parent) : "Standalone operation"}</div>
@@ -182,7 +183,19 @@ function showOperationDetails(d) {
             ${row("Coordinates", coords)}${row("Civilian cas.", d["Civilian casualties"])}${row("US cas.", d["US casualties"])}
         </div>
         ${modTags + terrTags ? `<div class="op-tags">${modTags}${terrTags}</div>` : ""}
+        <button id="advanced-button" class="op-advanced">Advanced Analysis Available</button>
     `);
+
+    d3.select("#advanced-button").on("click", function () {
+        console.log("hello")
+        if (showingAdvancedDetailsView) {
+            d3.select("#map-area").style("display", "block")
+        } else {
+            d3.select("#map-area").style("display", "none")
+        }
+        showingAdvancedDetailsView = !showingAdvancedDetailsView
+    });
+
 }
 
 function drawMap({ svg, path, outline, graticule, land, borders, countries, locations, projection, rivers, lakes, urban, cities }) {
