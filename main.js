@@ -206,7 +206,8 @@ function drawMap({ svg, path, outline, graticule, land, borders, countries, loca
         .scaleExtent([1, 50])
         .filter(function () {
             // Wheel only zooms with Cmd (Mac) or Ctrl (Win/Linux); plain scroll scrolls the page
-            if (d3.event.type === "wheel") return isMac ? d3.event.metaKey : d3.event.ctrlKey;
+            // if (d3.event.type === "wheel") return isMac ? d3.event.metaKey : d3.event.ctrlKey;
+            if (d3.event.type === "wheel") return d3.event.shiftKey;
             return !d3.event.button;
         })
         .on("zoom", function () {
