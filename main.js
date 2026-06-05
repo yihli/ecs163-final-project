@@ -84,7 +84,7 @@ Promise.all([
     d3.csv("Military_Operations_Strategic_cleaned_version_2.csv"),
     d3.json("rivers.geojson").catch(() => ({ type: "FeatureCollection", features: [] })),
     d3.json("lakes.geojson").catch(() => ({ type: "FeatureCollection", features: [] })),
-    d3.json("urban_areas.geojson").catch(() => ({ type: "FeatureCollection", features: [] })),
+    d3.json("urban_areas.csv").catch((e) => { console.log('urbanerror', e) }),
     d3.csv("display_cities.csv").catch(() => [])  // changed: csv + graceful fallback
 ]).then(([world, locations, rivers, lakes, urban, cities]) => {
     const outline = { type: "Sphere" };
@@ -273,7 +273,7 @@ function showOperationDetails(d) {
         <div class="op-parent">${d.Parent && d.Parent !== d.Operation ? "Part of " + esc(d.Parent) : "Standalone operation"}</div>
                 <button id="advanced-button" class="op-advanced">Show More Details</button>
     `);
-    
+
     if (showingAdvancedDetailsView) {
         toggleAdvancedDetails(d)
         toggleAdvancedDetails(d)
@@ -358,8 +358,11 @@ function drawMap({ svg, path, outline, graticule, land, borders, countries, loca
             return `translate(${x},${y})`;
         });
 
-    cityGroups.append("circle").attr("r", 0.25).attr("fill", "gray");
-    cityGroups.append("text").attr("y", 0.5).attr("font-size", "0.25px").attr("text-anchor", "middle").text(d => d.city_name);
+    // cityGroups.append("circle").attr("r", 0.25).attr("fill", "gray");
+    cityGroups
+        .append("text")
+        // .attr("y", 0.5)
+        .attr("font-size", "0.25px").attr("text-anchor", "middle").text(d => d.city_name);
 
     updateOperationsPoints(locations);
 }
