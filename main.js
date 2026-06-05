@@ -236,9 +236,12 @@ function toggleAdvancedDetails(d) {
         <div id="env-holder"><span class="k spec-font">Environment</span>${modTags + terrTags ? `<div class="op-tags">${modTags}${terrTags}</div>` : ""}</div>
         <div><span class="spec-font">Casualties</span></div>
          <div class="adv-chart" id="casualties-chart"></div>
-          <div><span class="spec-font">Actors</span></div>
+          <div><span class="spec-font">Actors and Targets</span></div>
+          <div class="adv-chart" id="actors-plot">
+          </div>
     `);
-    renderCasualtiesBarChart();
+        renderCasualtiesBarChart();
+        renderActorsBars();
     }
 
     d3.select("#advanced-button").on("click", function () {
@@ -270,8 +273,13 @@ function showOperationDetails(d) {
         <div class="op-parent">${d.Parent && d.Parent !== d.Operation ? "Part of " + esc(d.Parent) : "Standalone operation"}</div>
                 <button id="advanced-button" class="op-advanced">Show More Details</button>
     `);
+    
+    if (showingAdvancedDetailsView) {
+        toggleAdvancedDetails(d)
+        toggleAdvancedDetails(d)
+    }
 
-        d3.select("#advanced-button").on("click", function () {
+    d3.select("#advanced-button").on("click", function () {
         console.log("hello")
         toggleAdvancedDetails(d)
         // d3.select("#adv-details-area").style("display", "flex")
@@ -423,8 +431,8 @@ function renderCasualtiesBarChart() {
     const data = [
         // { label: "Side A", value: +operation["US + Allies casualties"] || 0 },
         // { label: "Side B", value: +operation["Opposing Forces casualties"] || 0 },
-        { label: "Civilian", value: +operation["Civilian casualties"] || 0 },
-        { label: "US", value: +operation["US casualties"] || 0 }
+        { label: "Civilian", value: +operation["Civilian casualties"] || 0, color: "red" },
+        { label: "US", value: +operation["US casualties"] || 0, color: "blue" }
     ];
 
     const width = 300;
@@ -459,7 +467,8 @@ function renderCasualtiesBarChart() {
         .attr("x", 0)
         .attr("y", d => y(d.label))
         .attr("width", d => x(d.value))
-        .attr("height", y.bandwidth());
+        .attr("height", y.bandwidth())
+        .attr("fill", d => d.color);
 
     g.selectAll(".label")
         .data(data)
@@ -469,6 +478,8 @@ function renderCasualtiesBarChart() {
         .attr("x", -8)
         .attr("y", d => y(d.label) + y.bandwidth() / 2)
         .attr("text-anchor", "end")
+        .attr("font-family", " JetBrains Mono", "monospace")
+        .attr("font-size", "12px")
         .attr("dominant-baseline", "middle")
         .text(d => d.label);
 
@@ -484,3 +495,61 @@ function renderCasualtiesBarChart() {
 
 }
 
+function renderActorsBars() {
+
+    const operation = dataPoints.find(d => d.ID === selectedId)
+    d3.select("#actor-bars").remove();
+
+    const data = [
+        { label: "US Allies", value: +operation["US allies"] || 0, color: "green" },
+        { label: "State", value: +operation["State targets"] || 0, color: "red" },
+        { label: "Non-State", value: +operation["Non-state targets"] || 0, color: "darkgray" }
+    ];
+
+    const total = d3.sum(data, d => d.value);
+    if (total === 0) return;
+
+    const width = 400;
+    const barWidth = 300;
+    const height = 30;
+
+    const svg = d3.select("#actors-plot")
+        .append("svg")
+        .attr("id", "actor-bars")
+        .attr("width", width)
+        .attr("height", height);
+
+
+
+    let x = 0;
+    data.forEach(d => {
+        const segmentWidth = barWidth * (d.value / total);
+
+        svg.append("rect")
+            .attr("x", x)
+            .attr("y", 10)
+            .attr("width", segmentWidth)
+            .attr("height", 20)
+            .attr("fill", d.color);
+
+
+
+        x += segmentWidth;
+    });
+
+    svg.append("text")
+        .attr("x", barWidth + 5)
+        .attr("y", height * 0.75)
+        .text("Total: " + total)
+        .attr("font-family", "JetBrains Mono")
+        .attr("font-size", "9px");
+
+
+    d3.select("#actors-plot").append().html(`
+        <div id="actors-legend">
+        <div class="actors-color-label green"><div class="actors-rect"></div>US Allies</div>
+        <div class="actors-color-label red"><div class="actors-rect"></div>State Targets</div>
+        <div class="actors-color-label darkgray"><div class="actors-rect"></div>Non-State Targets</div>
+    </div>
+        `)
+}

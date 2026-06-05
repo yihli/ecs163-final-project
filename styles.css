@@ -11,6 +11,7 @@ body {
   flex-direction: column;
   width: 100%;
   min-height: 100vh;
+  background-color: #e9e3d5;
 }
 
 #command-bar {
@@ -237,7 +238,8 @@ button:hover {
 }
 
 #details-panel {
-  overflow-y: auto;
+  overflow-y: hidden;
+  overflow-x: hidden;
 }
 
 .details-empty {
@@ -328,6 +330,38 @@ button:hover {
   position:fixed;
   right: 200px;
   bottom: 25px;
+}
+
+.actors-color-label {
+  height: 10px;
+  width: 10px;
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  white-space: unset;
+}
+
+.green {
+  background-color: green;
+}
+
+.red {
+  background-color: red;
+}
+
+.darkgray {
+  background-color: darkgray;
+}
+
+#actors-legend {
+  display: flex;
+  flex-direction: row;
+  justify-content: left;
+  gap: 80px;
+  font-family: "JetBrains Mono";
+  font-size: 9px;
+  white-space: nowrap;
+  margin-bottom: 5px;
 }
 
 button.active {
