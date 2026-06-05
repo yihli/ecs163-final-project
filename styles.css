@@ -323,8 +323,8 @@ button:hover {
 
 #casualty-legend {
   position: fixed;
-    right: 50px;
-    bottom: 25px;
+  right: 50px;
+  bottom: 25px;
 }
 #casualty-size-legend {
   position:fixed;
@@ -397,7 +397,7 @@ button.active {
   position: fixed;
   left: 15px;
   bottom: 15px;
-  padding: 5px
+  padding: 5px;
 }
 
 .op-advanced {
@@ -410,11 +410,36 @@ button.active {
 
 #adv-details-area {
   padding-left: 20px;
-  height: 100px;
+  padding-top: 15px;
+  padding-bottom: 15px;
+  min-height: 160px;
   width: 100%;
   background-color: green;
   display: flex;
   gap: 20px;
-  flex-direction: row;
+  flex-direction: column;
 }
 
+/* Added Styling Elements for Side-by-Side Panels */
+#comparison-container {
+  display: flex;
+  gap: 20px;
+  width: 100%;
+  max-width: 800px;
+}
+
+.comp-column {
+  flex: 1;
+  background-color: #eae2d5;
+  border: 1px dashed #23261c;
+  padding: 10px;
+}
+
+.comp-column h4 {
+  font-family: "Oswald", sans-serif;
+  text-transform: uppercase;
+  font-size: 12px;
+  margin: 0 0 8px 0;
+  letter-spacing: 0.05em;
+  color: #23261c;
+}
