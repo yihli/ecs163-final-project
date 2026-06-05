@@ -278,11 +278,26 @@ button:hover {
   font-size: 13px;
 }
 
+.spec-font {
+  font-family: "Oswald", sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #5c5b4e;
+  margin-right: 6px;
+}
+
 .op-tags {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
   margin-top: 8px;
+}
+
+#env-holder {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
 }
 
 .op-tag {
@@ -360,10 +375,12 @@ button.active {
 }
 
 #adv-details-area {
+  padding-left: 20px;
   height: 100px;
   width: 100%;
   background-color: green;
   display: flex;
+  gap: 20px;
   flex-direction: row;
 }
 

@@ -45,12 +45,12 @@ d3.select("#year-show-all-button").on("click", function () {
     }
 });
 
-d3.select("#modality-filter").on("change", function() {
+d3.select("#modality-filter").on("change", function () {
     modality = this.value
     updateOperationsPoints();
 })
 
-d3.select("#terrain-filter").on("change", function() {
+d3.select("#terrain-filter").on("change", function () {
     terrain = this.value
     updateOperationsPoints();
 })
@@ -197,7 +197,7 @@ const MODALITIES = [["Drones", "Drones"], ["Air to air", "Air-to-air"], ["Cruise
 const TERRAINS = [["Urban", "Urban"], ["Forest", "Forest"], ["Mountain", "Mountain"]];
 
 function esc(s) { return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
-function row(k, v) { return (v && v !== "NaN") ? `<div class="op-row"><span class="k">${esc(k)}</span><span class="v">${esc(v)}</span></div>` : ""; }
+function row(k, v) { return (v && v !== "NaN") ? `<div class="op-row"><span class="k">${esc(k)}</span><span class="v"> ${esc(v)}</span></div>` : ""; }
 
 function clearDetails() {
     selectedId = null;
@@ -205,38 +205,88 @@ function clearDetails() {
     if (mapGroup) highlightSelected();
 }
 
+function toggleAdvancedDetails(d) {
+    const coords = `${(+d.Latitude_Clean).toFixed(3)}, ${(+d.Longitude_Clean).toFixed(3)}`;
+    const dates = (d.Start && d.End) ? `${d.Start} → ${d.End}` : (d.Start || "");
+    const modTags = MODALITIES.filter(([col]) => String(d[col]).trim() === "1").map(([, lbl]) => `<span class="op-tag">${esc(lbl)}</span>`).join("");
+    const terrTags = TERRAINS.filter(([col]) => String(d[col]).trim() === "1").map(([, lbl]) => `<span class="op-tag terrain">${esc(lbl)}</span>`).join("");
+    if (showingAdvancedDetailsView) {
+        // d3.select("#map-area").style("display", "block")
+        // d3.select("#adv-details-area").style("display", "none")
+        d3.select("#advanced-button").text("Hide Advanced Analysis")
+        d3.select("#details-panel").html(`
+        <div class="op-name">${esc(d.Operation)}</div>
+        <div class="op-parent">${d.Parent && d.Parent !== d.Operation ? "Part of " + esc(d.Parent) : "Standalone operation"}</div>
+        <button id="advanced-button" class="op-advanced">Advanced Analysis Available</button>
+    `);
+        d3.select("#advanced-button").text("Show More Details")
+    } else {
+        // ${row("Civilian cas.", d["Civilian casualties"])}${row("US cas.", d["US casualties"])}
+        d3.select("#advanced-button").text("Hide Advanced Analysis")
+        d3.select("#details-panel").html(`
+            
+        <div class="op-name">${esc(d.Operation)}</div>
+        <div class="op-parent">${d.Parent && d.Parent !== d.Operation ? "Part of " + esc(d.Parent) : "Standalone operation"}</div>
+         <button id="advanced-button" class="op-advanced">Hide Details</button>
+        <div class="op-rows">
+            ${row("Year", d.Year)}${row("Dates", dates)}${row("Duration", d["Duration (days)"] ? d["Duration (days)"] + " days" : "")}
+            ${row("Coordinates", coords)}
+        </div>
+       
+        <div id="env-holder"><span class="k spec-font">Environment</span>${modTags + terrTags ? `<div class="op-tags">${modTags}${terrTags}</div>` : ""}</div>
+        <div><span class="spec-font">Casualties</span></div>
+         <div class="adv-chart" id="casualties-chart"></div>
+          <div><span class="spec-font">Actors</span></div>
+    `);
+    renderCasualtiesBarChart();
+    }
+
+    d3.select("#advanced-button").on("click", function () {
+        console.log("hello")
+        toggleAdvancedDetails(d)
+        // d3.select("#adv-details-area").style("display", "flex")
+        // d3.select("#general-info").html(`
+        //     <div class="op-row"><span class="k">Combat Environment</span></div>
+        //     ${modTags + terrTags ? `<div class="op-tags">${modTags}${terrTags}</div>` : ""}
+        //     ${row("Coordinates", coords)}${row("Civilian cas.", d["Civilian casualties"])}${row("US cas.", d["US casualties"])}
+        //     `)
+        // renderCasualtiesBarChart();
+
+    }
+    );
+
+
+    showingAdvancedDetailsView = !showingAdvancedDetailsView
+}
+
 function showOperationDetails(d) {
     const coords = `${(+d.Latitude_Clean).toFixed(3)}, ${(+d.Longitude_Clean).toFixed(3)}`;
     const dates = (d.Start && d.End) ? `${d.Start} → ${d.End}` : (d.Start || "");
     const modTags = MODALITIES.filter(([col]) => String(d[col]).trim() === "1").map(([, lbl]) => `<span class="op-tag">${esc(lbl)}</span>`).join("");
     const terrTags = TERRAINS.filter(([col]) => String(d[col]).trim() === "1").map(([, lbl]) => `<span class="op-tag terrain">${esc(lbl)}</span>`).join("");
+
     d3.select("#details-panel").html(`
         <div class="op-name">${esc(d.Operation)}</div>
         <div class="op-parent">${d.Parent && d.Parent !== d.Operation ? "Part of " + esc(d.Parent) : "Standalone operation"}</div>
-        <div class="op-rows">
-            ${row("Year", d.Year)}${row("Dates", dates)}${row("Duration", d["Duration (days)"] ? d["Duration (days)"] + " days" : "")}
-            ${row("Coordinates", coords)}${row("Civilian cas.", d["Civilian casualties"])}${row("US cas.", d["US casualties"])}
-        </div>
-        ${modTags + terrTags ? `<div class="op-tags">${modTags}${terrTags}</div>` : ""}
-        <button id="advanced-button" class="op-advanced">Advanced Analysis Available</button>
+                <button id="advanced-button" class="op-advanced">Show More Details</button>
     `);
 
-    d3.select("#advanced-button").on("click", function () {
+        d3.select("#advanced-button").on("click", function () {
         console.log("hello")
-        if (showingAdvancedDetailsView) {
-            d3.select("#map-area").style("display", "block")
-            d3.select("#adv-details-area").style("display", "none")
-            d3.select("#advanced-button").text("Advanced Analysis Available")
-        } else {
-            d3.select("#map-area").style("display", "none")
-            d3.select("#advanced-button").text("Hide Advanced Analysis")
-            d3.select("#adv-details-area").style("display", "flex")
-            renderModalityTable();
-            renderCasualtiesBarChart();
+        toggleAdvancedDetails(d)
+        // d3.select("#adv-details-area").style("display", "flex")
+        // d3.select("#general-info").html(`
+        //     <div class="op-row"><span class="k">Combat Environment</span></div>
+        //     ${modTags + terrTags ? `<div class="op-tags">${modTags}${terrTags}</div>` : ""}
+        //     ${row("Coordinates", coords)}${row("Civilian cas.", d["Civilian casualties"])}${row("US cas.", d["US casualties"])}
+        //     `)
+        // renderCasualtiesBarChart();
 
-        }
-        showingAdvancedDetailsView = !showingAdvancedDetailsView
-    });
+    }
+    );
+
+
+
 
 }
 
@@ -371,14 +421,14 @@ function renderCasualtiesBarChart() {
     d3.select("#casualty-breakdown").remove();
 
     const data = [
-        { label: "Side A", value: +operation["US + Allies casualties"] || 0 },
-        { label: "Side B", value: +operation["Opposing Forces casualties"] || 0 },
+        // { label: "Side A", value: +operation["US + Allies casualties"] || 0 },
+        // { label: "Side B", value: +operation["Opposing Forces casualties"] || 0 },
         { label: "Civilian", value: +operation["Civilian casualties"] || 0 },
         { label: "US", value: +operation["US casualties"] || 0 }
     ];
 
     const width = 300;
-    const height = 120;
+    const height = 60;
     const margin = { top: 10, right: 40, bottom: 10, left: 80 };
 
     const svg = d3.select("#casualties-chart")
