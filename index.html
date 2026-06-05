@@ -72,27 +72,18 @@
             </select>
           </div>
 
-          <div class="filter-group filter-actions">
-            <button id="reset-button">Reset</button>
-            <button id="jump-to-map-btn">Jump to Map</button>
+          <div class="filter-group">
             <button id="casualty-toggle">Casualty View</button>
           </div>
 
-          <div id="casualty-size-legend" class="filter-group">
-            <label>Total Casualties</label>
-            <svg id="legend-size" width="120" height="48"></svg>
+
+          <div class="filter-group filter-actions">
+            <button id="reset-button">Reset</button>
+            <button id="jump-to-map-btn">Jump to Map</button>
+
           </div>
 
-          <div id="casualty-legend" class="filter-group">
-            <label>Civilian Ratio</label>
-            <div id="legend-color-bar"></div>
-            <div id="legend-color-labels">
-              <span>Military</span>
-              <span>Civilian</span>
-            </div>
-            <span class="legend-note">Gray = no data</span>
-          </div>
-        </div>
+
       </aside>
 
       <!-- changed: details-panel moved here from filter-sidebar -->
@@ -116,6 +107,25 @@
     <div id="map-controls-guide">
       shift + scroll to zoom
     </div>
+
+
+    
+    <div id="casualty-size-legend" class="filter-group">
+      <label>Total Casualties</label>
+      <svg id="legend-size" width="120" height="48"></svg>
+    </div>
+
+    <div id="casualty-legend" class="filter-group">
+      <label>Civilian Ratio</label>
+      <div id="legend-color-bar"></div>
+      <div id="legend-color-labels">
+        <span>Military</span>
+        <span>Civilian</span>
+      </div>
+      <span class="legend-note">Gray = no data</span>
+    </div>
+  </div>
+
 
   </div>
   <script src="https://d3js.org/d3.v5.min.js"></script>
