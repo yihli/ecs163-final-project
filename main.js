@@ -10,6 +10,8 @@ document.getElementById("jump-to-map-btn").addEventListener("click", function ()
 });
 
 let year = -1;
+let modality = "all";
+let terrain = "all";
 let mapGroup;
 let projection;
 let dataPoints;
@@ -22,9 +24,9 @@ const civilianRatioColorScale = d3.scaleSequential(d3.interpolateYlOrRd).domain(
 let showingAdvancedDetailsView = false
 
 d3.select("#year-slider").on("input", function () {
-    year = event.target.value;
+    year = this.value;
     d3.select("#year-label").text(year);
-    updateOperationsPoints(dataPoints.filter(d => d["Year"] == year));
+    updateOperationsPoints();
 });
 
 d3.select("#year-show-all-button").on("click", function () {
@@ -33,15 +35,26 @@ d3.select("#year-show-all-button").on("click", function () {
         d3.select("#year-label").text("1989–2021");
         d3.select("#year-slider-container").style("display", "none");
         d3.select("#year-show-all-button").text("Filter by year");
-        updateOperationsPoints(dataPoints);
+        updateOperationsPoints();
     } else {
         year = 1989;
         d3.select("#year-label").text("1989");
         d3.select("#year-slider-container").style("display", "flex");
         d3.select("#year-show-all-button").text("Show all years");
-        updateOperationsPoints(dataPoints.filter(d => d["Year"] == year));
+        updateOperationsPoints();
     }
 });
+
+d3.select("#modality-filter").on("change", function() {
+    modality = this.value
+    updateOperationsPoints();
+})
+
+d3.select("#terrain-filter").on("change", function() {
+    terrain = this.value
+    updateOperationsPoints();
+})
+
 
 d3.select("#casualty-toggle").on("click", function () {
     casualtyMode = !casualtyMode;
@@ -54,6 +67,8 @@ d3.select("#casualty-toggle").on("click", function () {
 // added: reset button
 d3.select("#reset-button").on("click", function () {
     year = -1;
+    modality = "all";
+    terrain = "all";
     d3.select("#year-label").text("1989–2021");
     d3.select("#year-slider-container").style("display", "none");
     d3.select("#year-show-all-button").text("Filter by year");
@@ -61,7 +76,7 @@ d3.select("#reset-button").on("click", function () {
     d3.select("#terrain-filter").property("value", "all");
     d3.select("#modality-filter").property("value", "all");
     clearDetails();
-    updateOperationsPoints(dataPoints);
+    updateOperationsPoints();
 });
 
 Promise.all([
@@ -113,7 +128,26 @@ function getCasualtyFill(d) {
     return hasData ? civilianRatioColorScale(ratio) : "#999";
 }
 
-function updateOperationsPoints(newOperations) {
+function updateOperationsPoints() {
+    let newOperations = dataPoints
+    if (year != -1) {
+        newOperations = newOperations.filter(d =>
+            d["Year"] == year
+        )
+    }
+
+    if (modality != "all") {
+        newOperations = newOperations.filter(d =>
+            d[modality] == 1
+        )
+    }
+
+    if (terrain != "all") {
+        newOperations = newOperations.filter(d =>
+            d[terrain] == 1
+        )
+    }
+
     const points = mapGroup.selectAll(".operation-point").data(newOperations);
 
     points.exit().remove();
@@ -199,7 +233,7 @@ function showOperationDetails(d) {
             d3.select("#adv-details-area").style("display", "flex")
             renderModalityTable();
             renderCasualtiesBarChart();
-            renderParentDurationBox();
+
         }
         showingAdvancedDetailsView = !showingAdvancedDetailsView
     });
@@ -335,7 +369,7 @@ function renderModalityTable() {
 function renderCasualtiesBarChart() {
     const operation = dataPoints.find(d => d.ID === selectedId)
     d3.select("#casualty-breakdown").remove();
- 
+
     const data = [
         { label: "Side A", value: +operation["US + Allies casualties"] || 0 },
         { label: "Side B", value: +operation["Opposing Forces casualties"] || 0 },
@@ -400,61 +434,3 @@ function renderCasualtiesBarChart() {
 
 }
 
-function renderParentDurationBox() {
-    d3.select("#duration-chart").remove();
-
-    const operation = dataPoints.find(d => d.ID === selectedId)
-
-    const parentDuration = +operation["parent_duration"];
-    const opStart = +operation["Days into parent"] || 0;
-    const opDuration = +operation["Duration (days)"] || 0;
-
-    if (!parentDuration) return;
-
-    const width = 500;
-    const height = 70;
-    const margin = { top: 20, right: 20, bottom: 20, left: 20 };
-
-    const svg = d3.select("#adv-details-area")
-        .append("svg")
-        .attr("id", "duration-chart")
-        .attr("width", width)
-        .attr("height", height);
-
-    const innerWidth = width - margin.left - margin.right;
-
-    const x = d3.scaleLinear()
-        .domain([0, parentDuration])
-        .range([0, innerWidth]);
-
-    const g = svg.append("g")
-        .attr("transform", `translate(${margin.left},${margin.top})`);
-
-    // overall duration box
-    g.append("rect")
-        .attr("x", 0)
-        .attr("y", 10)
-        .attr("width", innerWidth)
-        .attr("height", 24)
-        .attr("fill", "none")
-        .attr("stroke", "black");
-
-    // inner box represents the specific operation length
-    g.append("rect")
-        .attr("x", x(opStart))
-        .attr("y", 14)
-        .attr("width", x(opDuration))
-        .attr("height", 16)
-        .attr("fill", "black");
-
-    // labels
-    g.append("text")
-        .attr("x", 0)
-        .attr("y", 8)
-        .text(operation.Parent + '(' + operation.parent_duration + ' days)');
-
-    g.append("text")
-        .attr("x", 0)
-        .attr("y", 50)
-        .text('Occurred ' + +operation["Days into parent"] + ' days in');
-}

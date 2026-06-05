@@ -1,108 +1,126 @@
 <!doctype html>
 <html>
+
 <head>
   <meta charset="utf-8">
   <title>US Military Operations</title>
   <!-- added: fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600&family=Barlow&family=JetBrains+Mono&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600&family=Barlow&family=JetBrains+Mono&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
-<div id="app">
+  <div id="app">
 
-  <!-- added: command bar -->
-  <header id="command-bar">
-    <div class="cb-brand">
-      <span class="cb-emblem"></span>
-      <div>
-        <h1>US Military Operations</h1>
-        <span class="cb-sub">Strategic Operations Database</span>
+    <!-- added: command bar -->
+    <header id="command-bar">
+      <div class="cb-brand">
+        <span class="cb-emblem"></span>
+        <div>
+          <h1>US Military Operations</h1>
+          <span class="cb-sub">Strategic Operations Database</span>
+        </div>
       </div>
+      <div class="cb-meta">
+        <div class="cb-stat"><span>Records</span><span id="record-count">—</span></div>
+        <div class="cb-stat"><span>Coverage</span><span>1989–2021</span></div>
+        <span class="cb-classification">UNCLASSIFIED</span>
+      </div>
+    </header>
+
+    <!-- added: control-strip wrapper (sidebars now horizontal) -->
+    <div id="control-strip">
+      <aside id="filter-sidebar">
+        <h2>Controls</h2>
+        <div id="filter-controls">
+          <div class="filter-group">
+            <label>Year</label>
+            <div id="year-label-container">
+              <span id="year-label">1989–2021</span>
+              <button id="year-show-all-button">Filter by year</button>
+            </div>
+            <div id="year-slider-container">
+              <input id="year-slider" type="range" min="1989" max="2021" value="2021">
+            </div>
+          </div>
+
+          <div class="filter-group">
+            <label>Terrain</label>
+            <select id="terrain-filter">
+              <option value="all">All</option>
+              <option value="Urban">Urban</option>
+              <option value="Forest">Forest</option>
+              <option value="Mountain">Mountain</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label>Modality</label>
+            <select id="modality-filter">
+              <option value="all">All</option>
+              <option value="Drones">Drones</option>
+              <option value="Air to air">Air to air</option>
+              <option value="Cruise missiles">Cruise missiles</option>
+              <option value="Aerial bombing">Aerial bombing</option>
+              <option value="Close air support">Close air support</option>
+              <option value="Ground troops">Ground troops</option>
+              <option value="Paramil">Paramil</option>
+            </select>
+          </div>
+
+          <div class="filter-group filter-actions">
+            <button id="reset-button">Reset</button>
+            <button id="jump-to-map-btn">Jump to Map</button>
+            <button id="casualty-toggle">Casualty View</button>
+          </div>
+
+          <div id="casualty-size-legend" class="filter-group">
+            <label>Total Casualties</label>
+            <svg id="legend-size" width="120" height="48"></svg>
+          </div>
+
+          <div id="casualty-legend" class="filter-group">
+            <label>Civilian Ratio</label>
+            <div id="legend-color-bar"></div>
+            <div id="legend-color-labels">
+              <span>Military</span>
+              <span>Civilian</span>
+            </div>
+            <span class="legend-note">Gray = no data</span>
+          </div>
+        </div>
+      </aside>
+
+      <!-- changed: details-panel moved here from filter-sidebar -->
+      <aside id="deepdive-sidebar">
+        <h2>Selected Operation</h2>
+        <div id="details-panel">
+          <p class="details-empty">Click a point on the map.</p>
+        </div>
+      </aside>
     </div>
-    <div class="cb-meta">
-      <div class="cb-stat"><span>Records</span><span id="record-count">—</span></div>
-      <div class="cb-stat"><span>Coverage</span><span>1989–2021</span></div>
-      <span class="cb-classification">UNCLASSIFIED</span>
+
+    <main id="map-area">
+      <svg id="map-svg"></svg>
+    </main>
+
+    <main id="adv-details-area">
+      <div class="adv-chart" id="modalities-table"></div>
+      <div class="adv-chart" id="casualties-chart"></div>
+    </main>
+
+    <div id="map-controls-guide">
+      shift + scroll to zoom
     </div>
-  </header>
 
-  <!-- added: control-strip wrapper (sidebars now horizontal) -->
-  <div id="control-strip">
-    <aside id="filter-sidebar">
-      <h2>Controls</h2>
-      <div id="filter-controls">
-        <div class="filter-group">
-          <label>Year</label>
-          <div id="year-label-container">
-            <span id="year-label">1989–2021</span>
-            <button id="year-show-all-button">Filter by year</button>
-          </div>
-          <div id="year-slider-container">
-            <input id="year-slider" type="range" min="1989" max="2021" value="2021">
-          </div>
-        </div>
-
-        <div class="filter-group">
-          <label>Terrain</label>
-          <select id="terrain-filter"><option value="all">All</option></select>
-        </div>
-
-        <div class="filter-group">
-          <label>Modality</label>
-          <select id="modality-filter"><option value="all">All</option></select>
-        </div>
-
-        <div class="filter-group filter-actions">
-          <button id="reset-button">Reset</button>
-          <button id="jump-to-map-btn">Jump to Map</button>
-          <button id="casualty-toggle">Casualty View</button>
-        </div>
-
-        <div id="casualty-size-legend" class="filter-group">
-          <label>Total Casualties</label>
-          <svg id="legend-size" width="120" height="48"></svg>
-        </div>
-
-        <div id="casualty-legend" class="filter-group">
-          <label>Civilian Ratio</label>
-          <div id="legend-color-bar"></div>
-          <div id="legend-color-labels">
-            <span>Military</span>
-            <span>Civilian</span>
-          </div>
-          <span class="legend-note">Gray = no data</span>
-        </div>
-      </div>
-    </aside>
-
-    <!-- changed: details-panel moved here from filter-sidebar -->
-    <aside id="deepdive-sidebar">
-      <h2>Selected Operation</h2>
-      <div id="details-panel">
-        <p class="details-empty">Click a point on the map.</p>
-      </div>
-    </aside>
   </div>
-
-  <main id="map-area">
-    <svg id="map-svg"></svg>
-  </main>
-
-  <main id="adv-details-area">
-    <div class="adv-chart" id="modalities-table"></div>
-    <div class="adv-chart" id="casualties-chart"></div>
-    <div class="adv-chart" id="duration-in-parent"></div>
-  </main>
-
-  <div id="map-controls-guide">
-    shift + scroll to zoom
-  </div>
-
-</div>
-<script src="https://d3js.org/d3.v5.min.js"></script>
-<script src="https://unpkg.com/topojson-client@3"></script>
-<script src="main.js"></script>
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <script src="https://unpkg.com/topojson-client@3"></script>
+  <script src="main.js"></script>
 </body>
+
 </html>
