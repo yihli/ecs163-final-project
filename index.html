@@ -73,14 +73,12 @@
             <button id="casualty-toggle">Casualty View</button>
           </div>
 
-
           <div class="filter-group filter-actions">
             <button id="reset-button">Reset</button>
             <button id="jump-to-map-btn">Jump to Map</button>
-
+            <button id="toggle-trends-btn" class="op-advanced">Reveal Trends</button>
           </div>
-
-
+        </div>
       </aside>
 
       <aside id="deepdive-sidebar">
@@ -118,11 +116,32 @@
       <div class="adv-chart" id="actors-plot"></div>
     </main>
 
+    <div id="macro-trends-dashboard" class="hidden-dashboard">
+      <div class="dashboard-header">
+          <h3>Strategic Overview | 1989–2021</h3>
+          <p>Aggregate timeline analysis of technological and political shifts.</p>
+      </div>
+      
+      <div class="charts-container">
+          <div class="chart-card">
+              <h4>Technological Shift | Modalities</h4>
+              <div id="trend-tech-chart"></div>
+          </div>
+          
+          <div class="chart-card">
+              <h4>Geopolitical Shift | State vs. Non-State</h4>
+              <div id="trend-targets-chart"></div>
+          </div>
+          
+          <div class="chart-card">
+              <h4>The Human Cost | Tech vs. Civilian Impact</h4>
+              <div id="trend-casualty-chart"></div>
+          </div>
+      </div>
+    </div>
     <div id="map-controls-guide">
       shift + scroll to zoom
     </div>
-
-
 
     <div id="casualty-size-legend" class="filter-group">
       <label>Total Casualties</label>
@@ -140,8 +159,6 @@
     </div>
   </div>
 
-
-  </div>
   <script src="https://d3js.org/d3.v5.min.js"></script>
   <script src="https://unpkg.com/topojson-client@3"></script>
   <script src="main.js"></script>

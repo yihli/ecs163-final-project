@@ -656,3 +656,155 @@ function renderSingleCompBar(containerId, operation) {
         .attr("dominant-baseline", "middle")
         .text(d => d.value);
 }
+
+// Some macro trend charts
+let isTrendsRevealed = false;
+
+d3.select("#toggle-trends-btn").on("click", function() {
+    isTrendsRevealed = !isTrendsRevealed;
+    const dashboard = d3.select("#macro-trends-dashboard");
+    
+    if (isTrendsRevealed) {
+        dashboard.classed("hidden-dashboard", false);
+        d3.select(this).text("Hide Macro Trends");
+        if (dataPoints && dataPoints.length > 0) {
+            renderAggregateTrends(dataPoints);
+        }
+        document.getElementById("macro-trends-dashboard").scrollIntoView({ behavior: "smooth" });
+    } else {
+        dashboard.classed("hidden-dashboard", true);
+        d3.select(this).text("Reveal Macro Trends");
+    }
+});
+
+function renderAggregateTrends(data) {
+    d3.select("#trend-tech-chart").selectAll("*").remove();
+    d3.select("#trend-targets-chart").selectAll("*").remove();
+    d3.select("#trend-casualty-chart").selectAll("*").remove();
+
+    const chartCard = document.querySelector(".chart-card");
+    if (!chartCard) return;
+
+    const margin = {top: 20, right: 30, bottom: 30, left: 40},
+          width = chartCard.clientWidth - margin.left - margin.right,
+          height = 250 - margin.top - margin.bottom;
+
+    const nestedData = d3.nest()
+        .key(d => d.Year)
+        .entries(data);
+
+    const aggregatedData = nestedData.map(d => {
+        const v = d.values;
+        const totalOps = v.length;
+        const stateOps = d3.sum(v, op => op["State targets"] == "1" ? 1 : 0);
+        const nonStateOps = d3.sum(v, op => op["Non-state targets"] == "1" ? 1 : 0);
+        const drones = d3.sum(v, op => op["Drones"] == "1" ? 1 : 0);
+        const ground = d3.sum(v, op => op["Ground troops"] == "1" ? 1 : 0);
+        
+        const civCas = d3.sum(v, op => +op["Civilian casualties"] || 0);
+        const totalCas = d3.sum(v, op => (+op["Side A casualties"]||0) + (+op["Side B casualties"]||0) + (+op["Civilian casualties"]||0) + (+op["US casualties"]||0));
+        const civRatio = totalCas > 0 ? civCas / totalCas : 0;
+
+        return { year: +d.key, totalOps, stateOps, nonStateOps, drones, ground, civRatio };
+    }).filter(d => !isNaN(d.year)).sort((a, b) => d3.ascending(a.year, b.year));
+
+    // Chart 1: Technological Shifts
+    const svgTech = d3.select("#trend-tech-chart")
+      .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    const x = d3.scaleLinear().domain(d3.extent(aggregatedData, d => d.year)).range([ 0, width ]);
+    svgTech.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x).tickFormat(d3.format("d")));
+
+    const yTech = d3.scaleLinear().domain([0, d3.max(aggregatedData, d => Math.max(d.drones, d.ground))]).range([ height, 0 ]);
+    svgTech.append("g").call(d3.axisLeft(yTech));
+
+    svgTech.append("path")
+      .datum(aggregatedData)
+      .attr("fill", "none")
+      .attr("stroke", "#4292c6") 
+      .attr("stroke-width", 2)
+      .attr("d", d3.line().x(d => x(d.year)).y(d => yTech(d.drones)));
+
+    svgTech.append("path")
+      .datum(aggregatedData)
+      .attr("fill", "none")
+      .attr("stroke", "#d8c59a") 
+      .attr("stroke-width", 2)
+      .attr("d", d3.line().x(d => x(d.year)).y(d => yTech(d.ground)));
+
+
+    // Chart 2: Target Shifts
+    const svgTargets = d3.select("#trend-targets-chart")
+      .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    svgTargets.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x).tickFormat(d3.format("d")));
+    const yTargets = d3.scaleLinear().domain([0, d3.max(aggregatedData, d => Math.max(d.stateOps, d.nonStateOps))]).range([ height, 0 ]);
+    svgTargets.append("g").call(d3.axisLeft(yTargets));
+
+    svgTargets.append("path")
+      .datum(aggregatedData)
+      .attr("fill", "none")
+      .attr("stroke", "#b4231c") 
+      .attr("stroke-width", 2)
+      .attr("d", d3.line().x(d => x(d.year)).y(d => yTargets(d.stateOps)));
+
+    svgTargets.append("path")
+      .datum(aggregatedData)
+      .attr("fill", "none")
+      .attr("stroke", "#888888")
+      .attr("stroke-width", 2)
+      .attr("d", d3.line().x(d => x(d.year)).y(d => yTargets(d.nonStateOps)));
+
+    svgTargets.append("line")
+      .attr("x1", x(2001)).attr("y1", 0)
+      .attr("x2", x(2001)).attr("y2", height)
+      .style("stroke-dasharray", "3, 3")
+      .style("stroke", "white");
+
+
+    // Chart 3: Human Cost
+    const svgCas = d3.select("#trend-casualty-chart")
+      .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    svgCas.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x).tickFormat(d3.format("d")));
+    
+    const yCasLeft = d3.scaleLinear().domain([0, d3.max(aggregatedData, d => d.drones)]).range([ height, 0 ]);
+    svgCas.append("g").call(d3.axisLeft(yCasLeft));
+
+    const yCasRight = d3.scaleLinear().domain([0, 1]).range([ height, 0 ]);
+    svgCas.append("g").attr("transform", `translate(${width},0)`).call(d3.axisRight(yCasRight).tickFormat(d3.format(".0%")));
+
+    svgCas.selectAll("rect")
+      .data(aggregatedData)
+      .enter()
+      .append("rect")
+        .attr("x", d => x(d.year) - 4)
+        .attr("y", d => yCasLeft(d.drones))
+        .attr("width", 8)
+        .attr("height", d => height - yCasLeft(d.drones))
+        .attr("fill", "#4292c6")
+        .attr("opacity", 0.5);
+
+    svgCas.append("path")
+      .datum(aggregatedData)
+      .attr("fill", "none")
+      .attr("stroke", "#ffaa00") 
+      .attr("stroke-width", 3)
+      .attr("d", d3.line()
+        .curve(d3.curveMonotoneX) 
+        .x(d => x(d.year))
+        .y(d => yCasRight(d.civRatio))
+      );
+}

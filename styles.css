@@ -326,8 +326,9 @@ button:hover {
   right: 50px;
   bottom: 25px;
 }
+
 #casualty-size-legend {
-  position:fixed;
+  position: fixed;
   right: 200px;
   bottom: 25px;
 }
@@ -420,7 +421,6 @@ button.active {
   flex-direction: column;
 }
 
-/* Added Styling Elements for Side-by-Side Panels */
 #comparison-container {
   display: flex;
   gap: 20px;
@@ -442,4 +442,66 @@ button.active {
   margin: 0 0 8px 0;
   letter-spacing: 0.05em;
   color: #23261c;
+}
+
+.hidden-dashboard {
+  display: none;
+}
+
+#macro-trends-dashboard {
+  background-color: #121212;
+  color: #e0e0e0;
+  padding: 30px;
+  margin-top: 20px;
+  border-top: 2px solid #333;
+  font-family: "JetBrains Mono", monospace;
+}
+
+.dashboard-header h3 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.dashboard-header p {
+  color: #888;
+  margin-bottom: 30px;
+}
+
+.charts-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: space-between;
+}
+
+.chart-card {
+  background-color: #1e1e1e;
+  border: 1px solid #333;
+  border-radius: 4px;
+  padding: 15px;
+  flex: 1 1 30%;
+  min-width: 300px;
+}
+
+.chart-card h4 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 14px;
+  color: #a0a0a0;
+  border-bottom: 1px solid #333;
+  padding-bottom: 8px;
+}
+
+.trend-tooltip {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 8px;
+  border-radius: 4px;
+  pointer-events: none;
+  font-size: 12px;
+  opacity: 0;
+  transition: opacity 0.2s;
 }
