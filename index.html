@@ -4,7 +4,6 @@
 <head>
   <meta charset="utf-8">
   <title>US Military Operations</title>
-  <!-- added: fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
@@ -16,7 +15,6 @@
 <body>
   <div id="app">
 
-    <!-- added: command bar -->
     <header id="command-bar">
       <div class="cb-brand">
         <span class="cb-emblem"></span>
@@ -32,7 +30,6 @@
       </div>
     </header>
 
-    <!-- added: control-strip wrapper (sidebars now horizontal) -->
     <div id="control-strip">
       <aside id="filter-sidebar">
         <h2>Controls</h2>
@@ -86,7 +83,6 @@
 
       </aside>
 
-      <!-- changed: details-panel moved here from filter-sidebar -->
       <aside id="deepdive-sidebar">
         <h2>Selected Operation</h2>
         <div id="details-panel">
@@ -99,15 +95,28 @@
       <svg id="map-svg"></svg>
     </main>
 
-    <!-- <main id="adv-details-area">
+    <main id="adv-details-area">
       <div id="general-info"></div>
       <div class="adv-chart" id="modalities-table"></div>
+      
+      <div id="comparison-container">
+        <div class="comp-column" id="comp-op-a">
+          <h4 id="comp-title-a">[Select Operation A]</h4>
+          <div class="adv-chart" id="casualties-chart-a"></div>
+        </div>
+        <div class="comp-column" id="comp-op-b">
+          <h4 id="comp-title-b">[Select Operation B]</h4>
+          <div class="adv-chart" id="casualties-chart-b"></div>
+        </div>
+      </div>
+
       <div class="adv-chart" id="casualties-chart">
         <div class="op-row">
           <span class="k">Casualties</span>
         </div>
       </div>
-    </main> -->
+      <div class="adv-chart" id="actors-plot"></div>
+    </main>
 
     <div id="map-controls-guide">
       shift + scroll to zoom

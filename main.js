@@ -23,6 +23,9 @@ const casualtySizeScale = d3.scaleSqrt().range([5, 25]);
 const civilianRatioColorScale = d3.scaleSequential(d3.interpolateYlOrRd).domain([0, 1]);
 let showingAdvancedDetailsView = false
 
+let selectedOpA = null;
+let selectedOpB = null;
+
 d3.select("#year-slider").on("input", function () {
     year = this.value;
     d3.select("#year-label").text(year);
@@ -69,6 +72,8 @@ d3.select("#reset-button").on("click", function () {
     year = -1;
     modality = "all";
     terrain = "all";
+    selectedOpA = null;
+    selectedOpB = null;
     d3.select("#year-label").text("1989–2021");
     d3.select("#year-slider-container").style("display", "none");
     d3.select("#year-show-all-button").text("Filter by year");
@@ -77,6 +82,7 @@ d3.select("#reset-button").on("click", function () {
     d3.select("#modality-filter").property("value", "all");
     clearDetails();
     updateOperationsPoints();
+    renderComparisonCharts();
 });
 
 Promise.all([
@@ -160,8 +166,17 @@ function updateOperationsPoints() {
         .style("cursor", "pointer")
         .on("click", function (d) {  // added: click to inspect
             selectedId = d.ID;
+            
+            if (!selectedOpA || selectedOpA.ID === d.ID) {
+                selectedOpA = d;
+            } else {
+                selectedOpB = selectedOpA;
+                selectedOpA = d;
+            }
+
             showOperationDetails(d);
             highlightSelected();
+            renderComparisonCharts();
         });
 
     entered.append("title").text(d =>
@@ -292,10 +307,6 @@ function showOperationDetails(d) {
 
     }
     );
-
-
-
-
 }
 
 function drawMap({ svg, path, outline, graticule, land, borders, countries, locations, projection, rivers, lakes, urban, cities }) {
@@ -555,4 +566,93 @@ function renderActorsBars() {
         <div class="actors-color-label darkgray"><div class="actors-rect"></div>Non-State Targets</div>
     </div>
         `)
+}
+
+function renderComparisonCharts() {
+    d3.select("#casualties-chart-a").selectAll("*").remove();
+    d3.select("#casualties-chart-b").selectAll("*").remove();
+
+    if (!selectedOpA) {
+        d3.select("#comp-title-a").text("[Click a point for Operation A]");
+        return;
+    }
+    
+    d3.select("#comp-title-a").text(`A: ${selectedOpA.Operation} (${selectedOpA.Year})`);
+    renderSingleCompBar("#casualties-chart-a", selectedOpA);
+
+    if (!selectedOpB) {
+        d3.select("#comp-title-b").text("[Click another point to compare with B]");
+        return;
+    }
+    
+    d3.select("#comp-title-b").text(`B: ${selectedOpB.Operation} (${selectedOpB.Year})`);
+    renderSingleCompBar("#casualties-chart-b", selectedOpB);
+}
+
+function renderSingleCompBar(containerId, operation) {
+    const data = [
+        { label: "Civilian", value: +operation["Civilian casualties"] || 0, color: "#b4231c" },
+        { label: "US", value: +operation["US casualties"] || 0, color: "#4292c6" }
+    ];
+
+    const width = 280;
+    const height = 60;
+    const margin = { top: 5, right: 40, bottom: 5, left: 60 };
+
+    const svg = d3.select(containerId)
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height);
+
+    const innerWidth = width - margin.left - margin.right;
+    const innerHeight = height - margin.top - margin.bottom;
+
+    const g = svg.append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    const maxVal = Math.max(
+        d3.max([selectedOpA, selectedOpB].filter(Boolean), d => Math.max(+d["Civilian casualties"] || 0, +d["US casualties"] || 0)) || 1
+    );
+
+    const x = d3.scaleLinear()
+        .domain([0, maxVal])
+        .range([0, innerWidth]);
+
+    const y = d3.scaleBand()
+        .domain(data.map(d => d.label))
+        .range([0, innerHeight])
+        .padding(0.2);
+
+    g.selectAll("rect")
+        .data(data)
+        .enter()
+        .append("rect")
+        .attr("x", 0)
+        .attr("y", d => y(d.label))
+        .attr("width", d => x(d.value))
+        .attr("height", y.bandwidth())
+        .attr("fill", d => d.color);
+
+    g.selectAll(".label")
+        .data(data)
+        .enter()
+        .append("text")
+        .attr("x", -8)
+        .attr("y", d => y(d.label) + y.bandwidth() / 2)
+        .attr("text-anchor", "end")
+        .attr("font-family", "JetBrains Mono, monospace")
+        .attr("font-size", "10px")
+        .attr("dominant-baseline", "middle")
+        .text(d => d.label);
+
+    g.selectAll(".value")
+        .data(data)
+        .enter()
+        .append("text")
+        .attr("x", d => x(d.value) + 5)
+        .attr("y", d => y(d.label) + y.bandwidth() / 2)
+        .attr("font-family", "JetBrains Mono, monospace")
+        .attr("font-size", "10px")
+        .attr("dominant-baseline", "middle")
+        .text(d => d.value);
 }
