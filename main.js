@@ -19,6 +19,8 @@ let zoomLevel = 1;
 let selectedId = null;  // added: track clicked point
 let casualtyMode = false;
 let maxTotalCasualties = 1;
+let multiSelectOn = false;
+let multiSelectedPoints = []
 const casualtySizeScale = d3.scaleSqrt().range([5, 25]);
 const civilianRatioColorScale = d3.scaleSequential(d3.interpolateYlOrRd).domain([0, 1]);
 let showingAdvancedDetailsView = false
@@ -61,11 +63,15 @@ d3.select("#terrain-filter").on("change", function () {
 
 d3.select("#casualty-toggle").on("click", function () {
     casualtyMode = !casualtyMode;
+    d3.select(this).style("background-color", casualtyMode ? "green" : "red")
     d3.select(this).classed("active", casualtyMode);
     d3.select("#casualty-legend").style("display", casualtyMode ? "flex" : "none");
     d3.select("#casualty-size-legend").style("display", casualtyMode ? "flex" : "none");
     updateOperationsPoints(year === -1 ? dataPoints : dataPoints.filter(d => d["Year"] == year));
 });
+
+
+
 
 // added: reset button
 d3.select("#reset-button").on("click", function () {
@@ -74,6 +80,13 @@ d3.select("#reset-button").on("click", function () {
     terrain = "all";
     selectedOpA = null;
     selectedOpB = null;
+
+    multiSelectOn = !multiSelectOn
+    d3.select("#multi-select-btn").text("MULT_SELECT MODE").style("background-color", "red");
+    multiSelectedPoints = []
+    d3.select("#multi-plots").style("display", "none");
+    d3.select("#deepdive-sidebar").style("display", "block");
+
     d3.select("#year-label").text("1989–2021");
     d3.select("#year-slider-container").style("display", "none");
     d3.select("#year-show-all-button").text("Filter by year");
@@ -165,6 +178,19 @@ function updateOperationsPoints() {
         .attr("stroke", "black")
         .style("cursor", "pointer")
         .on("click", function (d) {  // added: click to inspect
+
+            if (multiSelectOn) {
+                if (multiSelectedPoints.some(e => e.ID == d.ID)) {
+                    multiSelectedPoints = multiSelectedPoints.filter(e => e.ID != d.ID);
+                } else {
+                    multiSelectedPoints = [...multiSelectedPoints, d];
+                }
+                console.log(multiSelectedPoints)
+                multiSelectHighlightSelected();
+                renderMultiSelectPlots(multiSelectedPoints);
+                return;
+            }
+
             selectedId = d.ID;
 
             if (!selectedOpA || selectedOpA.ID === d.ID) {
@@ -207,6 +233,20 @@ function highlightSelected() {
         .attr("stroke-width", d => (d.ID === selectedId ? 2 : 0.5) / zoomLevel);
 }
 
+function multiSelectHighlightSelected() {
+    if (!mapGroup) return;
+    mapGroup.selectAll(".operation-point")
+        .attr("fill", d => multiSelectedPoints.some(e => e.ID == d.ID) ? "green" : (casualtyMode ? getCasualtyFill(d) : "red"))
+        .attr("r", d => {
+            if (casualtyMode) {
+                const base = casualtySizeScale(parseCasualties(d).total);
+                return (d.ID === selectedId ? base * 1.4 : base) / zoomLevel;
+            }
+            return (multiSelectedPoints.some(e => e.ID == d.ID) ? 7 : 5) / zoomLevel
+        })
+        .attr("stroke-width", d => (d.ID === selectedId ? 2 : 0.5) / zoomLevel);
+}
+
 // added: details panel helpers
 const MODALITIES = [["Drones", "Drones"], ["Air to air", "Air-to-air"], ["Cruise missiles", "Cruise missiles"], ["Aerial bombing", "Aerial bombing"], ["Close air support", "Close air support"], ["Ground troops", "Ground troops"], ["Paramil", "Paramilitary"]];
 const TERRAINS = [["Urban", "Urban"], ["Forest", "Forest"], ["Mountain", "Mountain"]];
@@ -235,7 +275,9 @@ function toggleAdvancedDetails(d) {
         <button id="advanced-button" class="op-advanced">Advanced Analysis Available</button>
     `);
         d3.select("#advanced-button").text("Show More Details")
+        d3.select("#adv-details-area").style("display", "none");
     } else {
+        d3.select("#adv-details-area").style("display", "block");
         // ${row("Civilian cas.", d["Civilian casualties"])}${row("US cas.", d["US casualties"])}
         d3.select("#advanced-button").text("Hide Advanced Analysis")
         d3.select("#details-panel").html(`
@@ -326,6 +368,10 @@ function drawMap({ svg, path, outline, graticule, land, borders, countries, loca
             mapGroup.attr("transform", d3.event.transform);
             mapGroup.selectAll(".country-label").attr("font-size", d => Math.sqrt(path.area(d)) / 10);
             mapGroup.selectAll(".city").style("display", d3.event.transform.k > 15 ? "block" : "none");
+            if (multiSelectOn) {
+                multiSelectHighlightSelected();
+                return
+            }
             highlightSelected();  // added: keep highlight in sync on zoom
         });
 
@@ -568,6 +614,64 @@ function renderActorsBars() {
         `)
 }
 
+function renderActorsBarsPrevious() {
+    const operation = dataPoints.find(d => d.ID === selectedOpB.ID)
+    d3.select("#actor-bars-b").remove();
+
+    const data = [
+        { label: "US Allies", value: +operation["US allies"] || 0, color: "green" },
+        { label: "State", value: +operation["State targets"] || 0, color: "red" },
+        { label: "Non-State", value: +operation["Non-state targets"] || 0, color: "darkgray" }
+    ];
+
+    const total = d3.sum(data, d => d.value);
+    if (total === 0) return;
+
+    const width = 400;
+    const barWidth = 300;
+    const height = 30;
+
+    const svg = d3.select("#actors-chart-b")
+        .append("svg")
+        .attr("id", "actor-bars-b")
+        .attr("width", width)
+        .attr("height", height);
+
+
+
+    let x = 0;
+    data.forEach(d => {
+        const segmentWidth = barWidth * (d.value / total);
+
+        svg.append("rect")
+            .attr("x", x)
+            .attr("y", 10)
+            .attr("width", segmentWidth)
+            .attr("height", 20)
+            .attr("fill", d.color);
+
+
+
+        x += segmentWidth;
+    });
+
+    svg.append("text")
+        .attr("x", barWidth + 5)
+        .attr("y", height * 0.75)
+        .text("Total: " + total)
+        .attr("font-family", "JetBrains Mono")
+        .attr("font-size", "9px");
+
+
+    d3.select("#actors-chart-b").append().html(`
+        <div id="actors-legend-b">
+        <div class="actors-color-label green"><div class="actors-rect"></div>US Allies</div>
+        <div class="actors-color-label red"><div class="actors-rect"></div>State Targets</div>
+        <div class="actors-color-label darkgray"><div class="actors-rect"></div>Non-State Targets</div>
+    </div>
+        `)
+}
+
 function renderComparisonCharts() {
     d3.select("#casualties-chart-a").selectAll("*").remove();
     d3.select("#casualties-chart-b").selectAll("*").remove();
@@ -581,12 +685,15 @@ function renderComparisonCharts() {
     renderSingleCompBar("#casualties-chart-a", selectedOpA);
 
     if (!selectedOpB) {
-        d3.select("#comp-title-b").text("[Click another point to compare with B]");
+        d3.select("#comp-title-b").text("[No Previous Selected Operation]");
         return;
     }
 
-    d3.select("#comp-title-b").text(`B: ${selectedOpB.Operation} (${selectedOpB.Year})`);
+    d3.select("#comp-title-b").text(`${selectedOpB.Operation} (${selectedOpB.Year})`);
     renderSingleCompBar("#casualties-chart-b", selectedOpB);
+    renderActorsBarsPrevious();
+
+
 }
 
 function renderSingleCompBar(containerId, operation) {
@@ -668,6 +775,7 @@ d3.select("#toggle-trends-btn").on("click", function () {
         dashboard.classed("hidden-dashboard", false);
         d3.select(this).text("Hide Macro Trends");
         d3.select("#map-area").style("display", "none");
+        d3.select("#control-strip").style("display", "none");
         d3.select("#adv-details-area").style("display", "none");
 
         if (dataPoints && dataPoints.length > 0) {
@@ -678,7 +786,7 @@ d3.select("#toggle-trends-btn").on("click", function () {
         dashboard.classed("hidden-dashboard", true);
         d3.select(this).text("Reveal Macro Trends");
         d3.select("#adv-details-area").style("display", "block");
-
+        d3.select("#control-strip").style("display", "flex");
         d3.select("#map-area").style("display", "block");
     }
 });
@@ -906,4 +1014,113 @@ function renderAggregateTrends(data) {
 
 
 
+}
+
+d3.select("#multi-select-btn").on("click", function () {
+    multiSelectOn = !multiSelectOn;
+    if (multiSelectOn) {
+        d3.select("#multi-select-btn").text("MULT_SELECT MODE").style("background-color", "green");
+        d3.select("#multi-plots").style("display", "flex");
+        renderMultiSelectPlots(multiSelectedPoints);
+        d3.select("#deepdive-sidebar").style("display", "none");
+    } else {
+        d3.select("#multi-select-btn").text("MULT_SELECT MODE").style("background-color", "red");
+        multiSelectedPoints = []
+        d3.select("#multi-plots").style("display", "none");
+        d3.select("#deepdive-sidebar").style("display", "block");
+        highlightSelected()
+    }
+});
+
+function renderMultiSelectPlots(data) {
+
+    d3.select("#operation-profile-comparison").selectAll("*").remove();
+
+    if (!data || data.length === 0) return;
+
+    const dimensions = [
+        "Duration (days)",
+        "Days into parent",
+        "State targets",
+        "Non-state targets",
+        "US allies",
+        "US casualties",
+        "Side B casualties",
+        "Civilian casualties"
+    ];
+
+    const margin = { top: 40, right: 0, bottom: 70, left: 0 };
+
+    const width =
+        d3.select("#multi-plots").node().clientWidth - 50
+
+
+    const height = d3.select("#multi-plots").node().clientHeight
+
+    const svg = d3.select("#operation-profile-comparison")
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom);
+
+    const g = svg.append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    const x = d3.scalePoint()
+        .domain(dimensions)
+        .range([0, width])
+        .padding(0.4);
+
+    const yScales = {};
+
+    dimensions.forEach(dim => {
+        const maxVal = d3.max(data, d => +d[dim] || 0);
+
+        yScales[dim] = d3.scaleLinear()
+            .domain([0, maxVal || 1])
+            .nice()
+            .range([height, 0]);
+    });
+
+    const color = d3.scaleOrdinal(d3.schemeTableau10)
+        .domain(data.map(d => d.Operation));
+
+    function path(d) {
+        return d3.line()(dimensions.map(dim => [
+            x(dim),
+            yScales[dim](+d[dim] || 0)
+        ]));
+    }
+
+    g.selectAll(".operation-line")
+        .data(data)
+        .enter()
+        .append("path")
+        .attr("class", "operation-line")
+        .attr("d", path)
+        .attr("fill", "none")
+        .attr("stroke", d => color(d.Operation))
+        .attr("stroke-width", 2)
+        .attr("opacity", 0.7);
+
+    dimensions.forEach(dim => {
+        const axis = g.append("g")
+            .attr("transform", `translate(${x(dim)},0)`)
+            .call(d3.axisLeft(yScales[dim]).ticks(4));
+
+        axis.append("text")
+            .attr("x", 0)
+            .attr("y", height + 30)
+            .attr("text-anchor", "middle")
+            .attr("font-family", "JetBrains Mono")
+            .attr("fill", "black")
+            .attr("font-size", "10px")
+            .attr("transform", `rotate(35, 0, ${height + 25})`)
+            .text(dim);
+    });
+
+    svg.append("text")
+        .attr("x", margin.left)
+        .attr("y", 20)
+        .attr("font-weight", "bold")
+        .text("Select Operations Feature Profiles");
 }

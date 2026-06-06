@@ -19,8 +19,8 @@ body {
   align-items: center;
   justify-content: space-between;
   height: 62px;
-  flex: 0 0 62px;
   padding: 0 22px;
+  flex: 0 0 62px;
   background: #23261c;
   color: #e9e3d5;
   border-bottom: 3px solid #b4231c;
@@ -28,6 +28,7 @@ body {
 
 .cb-brand {
   display: flex;
+  justify-content: left;
   align-items: center;
   gap: 14px;
 }
@@ -102,7 +103,7 @@ body {
 #filter-sidebar {
   flex: 1;
   padding: 10px 20px;
-  min-width: 650px;
+  min-width: 500px;
   border-right: 1px solid #c7bb9c;
   box-sizing: border-box;
 }
@@ -140,8 +141,21 @@ body {
   overflow: hidden;
 }
 
+
+#multi-plots {
+  flex: 2;
+  padding: 10px 20px;
+  box-sizing: border-box;
+  overflow: hidden;
+  display: none;
+  flex-direction: column;
+}
+
+
+
 #filter-sidebar h2,
-#deepdive-sidebar h2 {
+#deepdive-sidebar h2,
+#multi-plots h2 {
   font-family: "Oswald", sans-serif;
   font-size: 11px;
   font-weight: 600;
@@ -235,6 +249,7 @@ button:hover {
 
 #reset-button {
   max-width: 120px;
+  background-color: gray;
 }
 
 #details-panel {
@@ -354,7 +369,7 @@ button:hover {
   background-color: darkgray;
 }
 
-#actors-legend {
+#actors-legend, #actors-legend-b {
   display: flex;
   flex-direction: row;
   justify-content: left;
@@ -410,11 +425,10 @@ button.active {
 }
 
 #adv-details-area {
-  padding-left: 20px;
+
   padding-top: 15px;
-  padding-bottom: 15px;
+
   min-height: 160px;
-  width: 100%;
   background-color: green;
   display: flex;
   gap: 20px;
