@@ -617,6 +617,7 @@ function renderActorsBars() {
 function renderActorsBarsPrevious() {
     const operation = dataPoints.find(d => d.ID === selectedOpB.ID)
     d3.select("#actor-bars-b").remove();
+    d3.select("#actors-chart-b").html("");
 
     const data = [
         { label: "US Allies", value: +operation["US allies"] || 0, color: "green" },
