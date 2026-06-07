@@ -80,13 +80,30 @@ d3.select("#reset-button").on("click", function () {
     terrain = "all";
     selectedOpA = null;
     selectedOpB = null;
+    showingAdvancedDetailsView = false;
+    casualtyMode = false;
 
-    multiSelectOn = !multiSelectOn
+    d3.select("#casualty-toggle")
+        .style("background-color", "red")
+        .classed("active", false);
+
+    d3.select("#casualty-legend").style("display", "none");
+    d3.select("#casualty-size-legend").style("display", "none");
+
+    d3.select("#casualties-chart-a").selectAll("*").remove();
+
+    d3.select("#casualties-chart-b").selectAll("*").remove();
+    d3.select("#actor-bars-b").remove();
+    d3.select("#actors-chart-b").html("");
+
+
+
+    multiSelectOn = false;
     d3.select("#multi-select-btn").text("MULT_SELECT MODE").style("background-color", "red");
     multiSelectedPoints = []
     d3.select("#multi-plots").style("display", "none");
     d3.select("#deepdive-sidebar").style("display", "block");
-
+    d3.select("#adv-details-area").style("display", "none")
     d3.select("#year-label").text("1989–2021");
     d3.select("#year-slider-container").style("display", "none");
     d3.select("#year-show-all-button").text("Filter by year");
@@ -267,7 +284,7 @@ function toggleAdvancedDetails(d) {
     const terrTags = TERRAINS.filter(([col]) => String(d[col]).trim() === "1").map(([, lbl]) => `<span class="op-tag terrain">${esc(lbl)}</span>`).join("");
     if (showingAdvancedDetailsView) {
         // d3.select("#map-area").style("display", "block")
-        // d3.select("#adv-details-area").style("display", "none")
+        d3.select("#adv-details-area").style("display", "none")
         d3.select("#advanced-button").text("Hide Advanced Analysis")
         d3.select("#details-panel").html(`
         <div class="op-name">${esc(d.Operation)}</div>
@@ -687,6 +704,8 @@ function renderComparisonCharts() {
 
     if (!selectedOpB) {
         d3.select("#comp-title-b").text("[No Previous Selected Operation]");
+
+
         return;
     }
 
@@ -786,7 +805,7 @@ d3.select("#toggle-trends-btn").on("click", function () {
     } else {
         dashboard.classed("hidden-dashboard", true);
         d3.select(this).text("Reveal Macro Trends");
-        d3.select("#adv-details-area").style("display", "block");
+        // d3.select("#adv-details-area").style("display", "block");
         d3.select("#control-strip").style("display", "flex");
         d3.select("#map-area").style("display", "block");
     }
