@@ -28,6 +28,33 @@ let showingAdvancedDetailsView = false
 let selectedOpA = null;
 let selectedOpB = null;
 
+// Some macro trend charts
+let isTrendsRevealed = false;
+
+d3.select("#toggle-trends-btn").on("click", function () {
+    isTrendsRevealed = !isTrendsRevealed;
+    const dashboard = d3.select("#macro-trends-dashboard");
+
+    if (isTrendsRevealed) {
+        dashboard.classed("hidden-dashboard", false);
+        d3.select(this).text("Hide Macro Trends");
+        d3.select("#map-area").style("display", "none");
+        d3.select("#control-strip").style("display", "none");
+        d3.select("#adv-details-area").style("display", "none");
+
+        if (dataPoints && dataPoints.length > 0) {
+            renderAggregateTrends(dataPoints);
+        }
+        document.getElementById("macro-trends-dashboard").scrollIntoView({ behavior: "smooth" });
+    } else {
+        dashboard.classed("hidden-dashboard", true);
+        d3.select(this).text("Reveal Macro Trends");
+        // d3.select("#adv-details-area").style("display", "block");
+        d3.select("#control-strip").style("display", "flex");
+        d3.select("#map-area").style("display", "block");
+    }
+});
+
 d3.select("#year-slider").on("input", function () {
     year = this.value;
     d3.select("#year-label").text(year);
@@ -783,33 +810,6 @@ function renderSingleCompBar(containerId, operation) {
         .attr("dominant-baseline", "middle")
         .text(d => d.value);
 }
-
-// Some macro trend charts
-let isTrendsRevealed = false;
-
-d3.select("#toggle-trends-btn").on("click", function () {
-    isTrendsRevealed = !isTrendsRevealed;
-    const dashboard = d3.select("#macro-trends-dashboard");
-
-    if (isTrendsRevealed) {
-        dashboard.classed("hidden-dashboard", false);
-        d3.select(this).text("Hide Macro Trends");
-        d3.select("#map-area").style("display", "none");
-        d3.select("#control-strip").style("display", "none");
-        d3.select("#adv-details-area").style("display", "none");
-
-        if (dataPoints && dataPoints.length > 0) {
-            renderAggregateTrends(dataPoints);
-        }
-        document.getElementById("macro-trends-dashboard").scrollIntoView({ behavior: "smooth" });
-    } else {
-        dashboard.classed("hidden-dashboard", true);
-        d3.select(this).text("Reveal Macro Trends");
-        // d3.select("#adv-details-area").style("display", "block");
-        d3.select("#control-strip").style("display", "flex");
-        d3.select("#map-area").style("display", "block");
-    }
-});
 
 function renderAggregateTrends(data) {
     d3.select("#trend-tech-chart").selectAll("*").remove();
