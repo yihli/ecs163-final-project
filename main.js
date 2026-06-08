@@ -5,10 +5,12 @@ const height = window.innerHeight;
 
 svg.attr("viewBox", `0 0 ${width} ${height}`);
 
+// reveal entire map
 document.getElementById("jump-to-map-btn").addEventListener("click", function () {
     document.getElementById("map-area").scrollIntoView({ behavior: "smooth" });
 });
 
+// global and state variables 
 let year = -1;
 let modality = "all";
 let terrain = "all";
@@ -28,13 +30,15 @@ let showingAdvancedDetailsView = false
 let selectedOpA = null;
 let selectedOpB = null;
 
-// Some macro trend charts
 let isTrendsRevealed = false;
 
+// show macro trends button
 d3.select("#toggle-trends-btn").on("click", function () {
     isTrendsRevealed = !isTrendsRevealed;
     const dashboard = d3.select("#macro-trends-dashboard");
 
+    // hide map display and show macro trends
+    // and vice versa
     if (isTrendsRevealed) {
         dashboard.classed("hidden-dashboard", false);
         d3.select(this).text("Hide Macro Trends");
@@ -42,6 +46,7 @@ d3.select("#toggle-trends-btn").on("click", function () {
         d3.select("#control-strip").style("display", "none");
         d3.select("#adv-details-area").style("display", "none");
 
+        // only render if dataPoints is valid array
         if (dataPoints && dataPoints.length > 0) {
             renderAggregateTrends(dataPoints);
         }
@@ -55,13 +60,18 @@ d3.select("#toggle-trends-btn").on("click", function () {
     }
 });
 
+// year filter handler
 d3.select("#year-slider").on("input", function () {
+    // update year and update map points
     year = this.value;
     d3.select("#year-label").text(year);
     updateOperationsPoints();
 });
 
+// reset year filter 
 d3.select("#year-show-all-button").on("click", function () {
+    // toggle between selecting a single year w/ slider
+    // or simply displaying all years
     if (year != -1) {
         year = -1;
         d3.select("#year-label").text("1989–2021");
@@ -77,18 +87,24 @@ d3.select("#year-show-all-button").on("click", function () {
     }
 });
 
+// modality dropdown handler
 d3.select("#modality-filter").on("change", function () {
+    // filter points for selected modality
     modality = this.value
     updateOperationsPoints();
 })
 
+// terrain dropdown handler
 d3.select("#terrain-filter").on("change", function () {
+    // filter points for selected terrain
     terrain = this.value
     updateOperationsPoints();
 })
 
 
+// casualty toggle handler
 d3.select("#casualty-toggle").on("click", function () {
+    // set casualty mode and encodings for casualty data points
     casualtyMode = !casualtyMode;
     d3.select(this).style("background-color", casualtyMode ? "green" : "red")
     d3.select(this).classed("active", casualtyMode);
@@ -100,8 +116,9 @@ d3.select("#casualty-toggle").on("click", function () {
 
 
 
-// added: reset button
+// reset button handler
 d3.select("#reset-button").on("click", function () {
+    // reset all global state variables
     year = -1;
     modality = "all";
     terrain = "all";
@@ -110,21 +127,16 @@ d3.select("#reset-button").on("click", function () {
     showingAdvancedDetailsView = false;
     casualtyMode = false;
 
+    // hide all displayed UI elements
     d3.select("#casualty-toggle")
         .style("background-color", "red")
         .classed("active", false);
-
     d3.select("#casualty-legend").style("display", "none");
     d3.select("#casualty-size-legend").style("display", "none");
-
     d3.select("#casualties-chart-a").selectAll("*").remove();
-
     d3.select("#casualties-chart-b").selectAll("*").remove();
     d3.select("#actor-bars-b").remove();
     d3.select("#actors-chart-b").html("");
-
-
-
     multiSelectOn = false;
     d3.select("#multi-select-btn").text("MULT_SELECT MODE").style("background-color", "red");
     multiSelectedPoints = []
@@ -137,21 +149,26 @@ d3.select("#reset-button").on("click", function () {
     d3.select("#year-slider").property("value", 2021);
     d3.select("#terrain-filter").property("value", "all");
     d3.select("#modality-filter").property("value", "all");
+
+    // reset all points
     clearDetails();
     updateOperationsPoints();
     renderComparisonCharts();
 });
 
+// main function
+// load all datasets including natural earth data
 Promise.all([
     d3.json("countries-50m.json"),
     d3.csv("Military_Operations_Strategic_cleaned_version_2.csv"),
     d3.json("rivers.geojson").catch(() => ({ type: "FeatureCollection", features: [] })),
     d3.json("lakes.geojson").catch(() => ({ type: "FeatureCollection", features: [] })),
     d3.json("urban_areas.csv").catch((e) => { console.log('urbanerror', e) }),
-    d3.csv("display_cities.csv").catch(() => [])  // changed: csv + graceful fallback
+    d3.csv("display_cities.csv").catch(() => [])  
 ]).then(([world, locations, rivers, lakes, urban, cities]) => {
     const outline = { type: "Sphere" };
 
+    // casualty view
     console.log(locations)
     dataPoints = locations;
     d3.select("#record-count").text(locations.length);  // added: record count
@@ -159,6 +176,7 @@ Promise.all([
     casualtySizeScale.domain([0, maxTotalCasualties]);
     drawSizeLegend();
 
+    // define params for world map
     projection = d3.geoEqualEarth();
     projection.fitSize([width, height], outline);
     // Shift the projection down so Antarctica lands exactly at the SVG bottom edge
@@ -166,15 +184,18 @@ Promise.all([
     const [, ySouth] = projection([0, -89]);
     projection.translate([tx, ty + (height - ySouth)]);
 
+    // apply contextual encodings
     const path = d3.geoPath(projection);
     const graticule = d3.geoGraticule10();
     const land = topojson.feature(world, world.objects.land);
     const borders = topojson.mesh(world, world.objects.countries, (a, b) => a !== b);
     const countries = topojson.feature(world, world.objects.countries);
 
+    // render the map, contextual encodings, and data points
     drawMap({ svg, path, outline, graticule, land, borders, countries, locations, projection, rivers, lakes, urban, cities });
 });
 
+// calculate variables needed for casualty view
 function parseCasualties(d) {
     const sideA = +d["Side A casualties"] || 0;
     const sideB = +d["Side B casualties"] || 0;
@@ -186,13 +207,17 @@ function parseCasualties(d) {
     return { sideA, sideB, civilian, us, total, ratio, hasData };
 }
 
+// calculate color for the casualty amount
 function getCasualtyFill(d) {
     const { hasData, ratio } = parseCasualties(d);
     return hasData ? civilianRatioColorScale(ratio) : "#999";
 }
 
+// update the plotted data points according to global filter variables
 function updateOperationsPoints() {
     let newOperations = dataPoints
+
+    // apply filters
     if (year != -1) {
         newOperations = newOperations.filter(d =>
             d["Year"] == year
@@ -211,6 +236,7 @@ function updateOperationsPoints() {
         )
     }
 
+    // remove old points and render new points
     const points = mapGroup.selectAll(".operation-point").data(newOperations);
 
     points.exit().remove();
@@ -221,7 +247,7 @@ function updateOperationsPoints() {
         .attr("fill", "red")
         .attr("stroke", "black")
         .style("cursor", "pointer")
-        .on("click", function (d) {  // added: click to inspect
+        .on("click", function (d) {  // handle selected data points for single vs multiselect
 
             if (multiSelectOn) {
                 if (multiSelectedPoints.some(e => e.ID == d.ID)) {
@@ -249,9 +275,11 @@ function updateOperationsPoints() {
             renderComparisonCharts();
         });
 
+    // hover tooltip
     entered.append("title").text(d =>
         `${d.Operation}\n${d.Parent}\n${d.Year}\nLatitude: ${d.Latitude_Clean}\nLongitude: ${d.Longitude_Clean}`);
 
+    // render the points on the map
     entered.merge(points)
         .attr("cx", d => projection([+d.Longitude_Clean, +d.Latitude_Clean])[0])
         .attr("cy", d => projection([+d.Longitude_Clean, +d.Latitude_Clean])[1])
@@ -259,12 +287,15 @@ function updateOperationsPoints() {
         .attr("fill", d => casualtyMode ? getCasualtyFill(d) : "red")
         .attr("stroke-width", 0.5 / zoomLevel);
 
+    // highlight any selected points
     highlightSelected();
 }
 
-// added: highlight selected point
+// highlight selected point for single select
 function highlightSelected() {
     if (!mapGroup) return;
+
+    // control how the points are highlighted based on which is selected
     mapGroup.selectAll(".operation-point")
         .attr("fill", d => d.ID === selectedId ? "#b4231c" : (casualtyMode ? getCasualtyFill(d) : "red"))
         .attr("r", d => {
@@ -277,8 +308,10 @@ function highlightSelected() {
         .attr("stroke-width", d => (d.ID === selectedId ? 2 : 0.5) / zoomLevel);
 }
 
+// highlight selected points for multi select
 function multiSelectHighlightSelected() {
     if (!mapGroup) return;
+    // control how points are highlighted based on which are selected
     mapGroup.selectAll(".operation-point")
         .attr("fill", d => multiSelectedPoints.some(e => e.ID == d.ID) ? "green" : (casualtyMode ? getCasualtyFill(d) : "red"))
         .attr("r", d => {
@@ -291,24 +324,28 @@ function multiSelectHighlightSelected() {
         .attr("stroke-width", d => (d.ID === selectedId ? 2 : 0.5) / zoomLevel);
 }
 
-// added: details panel helpers
+// list of possible choices for the modalities and terrain filters
 const MODALITIES = [["Drones", "Drones"], ["Air to air", "Air-to-air"], ["Cruise missiles", "Cruise missiles"], ["Aerial bombing", "Aerial bombing"], ["Close air support", "Close air support"], ["Ground troops", "Ground troops"], ["Paramil", "Paramilitary"]];
 const TERRAINS = [["Urban", "Urban"], ["Forest", "Forest"], ["Mountain", "Mountain"]];
 
 function esc(s) { return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 function row(k, v) { return (v && v !== "NaN") ? `<div class="op-row"><span class="k">${esc(k)}</span><span class="v"> ${esc(v)}</span></div>` : ""; }
 
+// clear the details view and hide it
 function clearDetails() {
     selectedId = null;
     d3.select("#details-panel").html('<p class="details-empty">Click a point on the map.</p>');
     if (mapGroup) highlightSelected();
 }
 
+// show additional details when details view is shown
 function toggleAdvancedDetails(d) {
+    // define data values to display
     const coords = `${(+d.Latitude_Clean).toFixed(3)}, ${(+d.Longitude_Clean).toFixed(3)}`;
     const dates = (d.Start && d.End) ? `${d.Start} → ${d.End}` : (d.Start || "");
     const modTags = MODALITIES.filter(([col]) => String(d[col]).trim() === "1").map(([, lbl]) => `<span class="op-tag">${esc(lbl)}</span>`).join("");
     const terrTags = TERRAINS.filter(([col]) => String(d[col]).trim() === "1").map(([, lbl]) => `<span class="op-tag terrain">${esc(lbl)}</span>`).join("");
+    // toggle displaying the advanced details
     if (showingAdvancedDetailsView) {
         // d3.select("#map-area").style("display", "block")
         d3.select("#adv-details-area").style("display", "none")
@@ -345,6 +382,7 @@ function toggleAdvancedDetails(d) {
         renderActorsBars();
     }
 
+    // redefine the button handler 
     d3.select("#advanced-button").on("click", function () {
         console.log("hello")
         toggleAdvancedDetails(d)
@@ -363,23 +401,28 @@ function toggleAdvancedDetails(d) {
     showingAdvancedDetailsView = !showingAdvancedDetailsView
 }
 
+// show the basic operation details
 function showOperationDetails(d) {
+    // define data values needed
     const coords = `${(+d.Latitude_Clean).toFixed(3)}, ${(+d.Longitude_Clean).toFixed(3)}`;
     const dates = (d.Start && d.End) ? `${d.Start} → ${d.End}` : (d.Start || "");
     const modTags = MODALITIES.filter(([col]) => String(d[col]).trim() === "1").map(([, lbl]) => `<span class="op-tag">${esc(lbl)}</span>`).join("");
     const terrTags = TERRAINS.filter(([col]) => String(d[col]).trim() === "1").map(([, lbl]) => `<span class="op-tag terrain">${esc(lbl)}</span>`).join("");
 
+    // show details panel
     d3.select("#details-panel").html(`
         <div class="op-name">${esc(d.Operation)}</div>
         <div class="op-parent">${d.Parent && d.Parent !== d.Operation ? "Part of " + esc(d.Parent) : "Standalone operation"}</div>
                 <button id="advanced-button" class="op-advanced">Show More Details</button>
     `);
 
+    // show advanced details if user toggled it
     if (showingAdvancedDetailsView) {
         toggleAdvancedDetails(d)
         toggleAdvancedDetails(d)
     }
 
+    // define the show advanced details button handler
     d3.select("#advanced-button").on("click", function () {
         console.log("hello")
         toggleAdvancedDetails(d)
@@ -395,60 +438,62 @@ function showOperationDetails(d) {
     );
 }
 
+// main map render function - contextual encodings 
 function drawMap({ svg, path, outline, graticule, land, borders, countries, locations, projection, rivers, lakes, urban, cities }) {
     mapGroup = svg.append("g").attr("class", "map-group");
 
+    // mac accessibility 
     const isMac = /mac/i.test(navigator.platform);
     const zoom = d3.zoom()
         .scaleExtent([1, 50])
         .filter(function () {
-            // Wheel only zooms with Cmd (Mac) or Ctrl (Win/Linux); plain scroll scrolls the page
+            // Wheel only zooms with shift, plain scroll scrolls the page
             // if (d3.event.type === "wheel") return isMac ? d3.event.metaKey : d3.event.ctrlKey;
             if (d3.event.type === "wheel") return d3.event.shiftKey;
             return !d3.event.button;
         })
+        // define what happens when we zoom.
         .on("zoom", function () {
+            // dynamically resize points
             zoomLevel = d3.event.transform.k;
             mapGroup.attr("transform", d3.event.transform);
             mapGroup.selectAll(".country-label").attr("font-size", d => Math.sqrt(path.area(d)) / 10);
             mapGroup.selectAll(".city").style("display", d3.event.transform.k > 15 ? "block" : "none");
+            // rehighlight points to sync with zoom
             if (multiSelectOn) {
                 multiSelectHighlightSelected();
                 return
             }
-            highlightSelected();  // added: keep highlight in sync on zoom
+            highlightSelected();  
         });
-
     svg.call(zoom);
 
+    // render contextual encodings 
     mapGroup.append("path").datum(outline).attr("d", path).attr("fill", "#9ecae1");
     mapGroup.append("path").datum(graticule).attr("d", path).attr("stroke", "#ccc").attr("fill", "none");
     mapGroup.append("path").datum(land).attr("d", path).attr("fill", "#d8c59a");
     mapGroup.append("path").datum(borders).attr("d", path).attr("fill", "none").attr("stroke", "#000").attr("stroke-width", "0.25px").attr("opacity", "0.5");
     mapGroup.append("path").datum(outline).attr("d", path).attr("fill", "none").attr("stroke", "#000");
-
     mapGroup.selectAll(".river").data(rivers.features).enter().append("path")
         .attr("class", "river").attr("d", path).attr("fill", "none").attr("stroke", "#4292c6").attr("stroke-width", 0.25);
-
     mapGroup.selectAll(".lake").data(lakes.features).enter().append("path")
         .attr("class", "lake").attr("d", path).attr("fill", "#4292c6").attr("stroke", "#4292c6").attr("stroke-width", 0.25);
-
     mapGroup.selectAll(".urban").data(urban.features).enter().append("path")
         .attr("class", "urban").attr("d", path).attr("fill", "orange").attr("stroke", "orange").attr("stroke-width", 0.25);
-
+    // render country labels based on size of country (reduce obstruction)
     mapGroup.selectAll(".country-label")
         .data(countries.features.filter(d => path.area(d) > 70))
         .enter().append("text")
         .attr("class", "country-label")
-        .attr("x", d => path.centroid(d)[0])
+        .attr("x", d => path.centroid(d)[0]) // get center of country
         .attr("y", d => path.centroid(d)[1])
-        .attr("font-size", d => Math.sqrt(path.area(d)) / 10)
+        .attr("font-size", d => Math.sqrt(path.area(d)) / 10) // resize based on country area
         .attr("text-anchor", "middle")
         .attr("fill", "blue")
         .attr("pointer-events", "none")
         .text(d => d.properties.name || d.id);
 
-    // changed: display_cities.csv uses lat/lon/city_name fields
+    // display_cities.csv uses lat/lon/city_name fields
     const cityGroups = mapGroup.selectAll(".city")
         .data(cities.filter(c => c.latitude && c.longitude))
         .enter().append("g")
