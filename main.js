@@ -497,9 +497,12 @@ function drawSizeLegend() {
     });
 }
 
+// Renders table for modalities used in selected operation
 function renderModalityTable() {
+    // Retrieve specific operation data using the currently selected ID
     const operation = dataPoints.find(d => d.ID === selectedId)
 
+    // List of military modalities
     const modalities = [
         "Drones",
         "Air to air",
@@ -510,8 +513,10 @@ function renderModalityTable() {
         "Paramil"
     ];
 
+    // Clear existing modality table
     d3.select("#modality-table").remove();
 
+    // Create new table
     const table = d3.select("#modalities-table")
         .append("table")
         .attr("id", "modality-table");
@@ -528,10 +533,15 @@ function renderModalityTable() {
         .text(d => operation[d] == 1 ? "Used" : "Unused");
 }
 
+// Bar chart for Civilian vs US casualties for selected operation
 function renderCasualtiesBarChart() {
+    // Retrieve current operation data
     const operation = dataPoints.find(d => d.ID === selectedId)
+    
+    // Clear any existing casualty chart
     d3.select("#casualty-breakdown").remove();
 
+    // Format the casualty data, converting string values to numbers (defaulting to 0)
     const data = [
         // { label: "Side A", value: +operation["US + Allies casualties"] || 0 },
         // { label: "Side B", value: +operation["Opposing Forces casualties"] || 0 },
@@ -539,10 +549,12 @@ function renderCasualtiesBarChart() {
         { label: "US", value: +operation["US casualties"] || 0, color: "blue" }
     ];
 
+    // Chart dimensions and margins
     const width = 300;
     const height = 60;
     const margin = { top: 10, right: 40, bottom: 10, left: 80 };
 
+    // Initialize SVG container
     const svg = d3.select("#casualties-chart")
         .append("svg")
         .attr("id", "casualty-breakdown")
@@ -555,15 +567,18 @@ function renderCasualtiesBarChart() {
     const g = svg.append("g")
         .attr("transform", `translate(${margin.left},${margin.top})`);
 
+    // X scale
     const x = d3.scaleLinear()
         .domain([0, d3.max(data, d => d.value) || 1])
         .range([0, innerWidth]);
 
+    // Y scale
     const y = d3.scaleBand()
         .domain(data.map(d => d.label))
         .range([0, innerHeight])
         .padding(0.2);
 
+    // Horizontal bars
     g.selectAll("rect")
         .data(data)
         .enter()
@@ -574,6 +589,7 @@ function renderCasualtiesBarChart() {
         .attr("height", y.bandwidth())
         .attr("fill", d => d.color);
 
+    // Text labels
     g.selectAll(".label")
         .data(data)
         .enter()
@@ -587,6 +603,7 @@ function renderCasualtiesBarChart() {
         .attr("dominant-baseline", "middle")
         .text(d => d.label);
 
+    // Bar values
     g.selectAll(".value")
         .data(data)
         .enter()
@@ -599,17 +616,21 @@ function renderCasualtiesBarChart() {
 
 }
 
+// Bar chart of target actors
 function renderActorsBars() {
 
+    // Current operation data
     const operation = dataPoints.find(d => d.ID === selectedId)
     d3.select("#actor-bars").remove();
 
+    // Target actor data
     const data = [
         { label: "US Allies", value: +operation["US allies"] || 0, color: "green" },
         { label: "State", value: +operation["State targets"] || 0, color: "red" },
         { label: "Non-State", value: +operation["Non-state targets"] || 0, color: "darkgray" }
     ];
 
+    // Calculate total actors
     const total = d3.sum(data, d => d.value);
     if (total === 0) return;
 
@@ -623,12 +644,11 @@ function renderActorsBars() {
         .attr("width", width)
         .attr("height", height);
 
-
-
     let x = 0;
     data.forEach(d => {
         const segmentWidth = barWidth * (d.value / total);
 
+        // Draw the stacked segment
         svg.append("rect")
             .attr("x", x)
             .attr("y", 10)
@@ -638,9 +658,10 @@ function renderActorsBars() {
 
 
 
-        x += segmentWidth;
+        x += segmentWidth; 
     });
 
+    // Counts
     svg.append("text")
         .attr("x", barWidth + 5)
         .attr("y", height * 0.75)
@@ -649,6 +670,7 @@ function renderActorsBars() {
         .attr("font-size", "9px");
 
 
+    // Legend
     d3.select("#actors-plot").append().html(`
         <div id="actors-legend">
         <div class="actors-color-label green"><div class="actors-rect"></div>US Allies</div>
@@ -658,6 +680,7 @@ function renderActorsBars() {
         `)
 }
 
+// Render actor bars
 function renderActorsBarsPrevious() {
     const operation = dataPoints.find(d => d.ID === selectedOpB.ID)
     d3.select("#actor-bars-b").remove();
@@ -708,6 +731,7 @@ function renderActorsBarsPrevious() {
         .attr("font-size", "9px");
 
 
+    // Chart legend
     d3.select("#actors-chart-b").append().html(`
         <div id="actors-legend-b">
         <div class="actors-color-label green"><div class="actors-rect"></div>US Allies</div>
@@ -717,7 +741,9 @@ function renderActorsBarsPrevious() {
         `)
 }
 
+// Side-by-side comparison charts
 function renderComparisonCharts() {
+    // Clear existing SVGs to prep for redraw
     d3.select("#casualties-chart-a").selectAll("*").remove();
     d3.select("#casualties-chart-b").selectAll("*").remove();
 
@@ -726,6 +752,7 @@ function renderComparisonCharts() {
         return;
     }
 
+    // Casualty chart A
     d3.select("#comp-title-a").text(`A: ${selectedOpA.Operation} (${selectedOpA.Year})`);
     renderSingleCompBar("#casualties-chart-a", selectedOpA);
 
@@ -736,6 +763,7 @@ function renderComparisonCharts() {
         return;
     }
 
+    // Casualty chart B
     d3.select("#comp-title-b").text(`${selectedOpB.Operation} (${selectedOpB.Year})`);
     renderSingleCompBar("#casualties-chart-b", selectedOpB);
     renderActorsBarsPrevious();
@@ -743,6 +771,7 @@ function renderComparisonCharts() {
 
 }
 
+// Casualty comparison bar chart
 function renderSingleCompBar(containerId, operation) {
     const data = [
         { label: "Civilian", value: +operation["Civilian casualties"] || 0, color: "#b4231c" },
@@ -768,6 +797,7 @@ function renderSingleCompBar(containerId, operation) {
         d3.max([selectedOpA, selectedOpB].filter(Boolean), d => Math.max(+d["Civilian casualties"] || 0, +d["US casualties"] || 0)) || 1
     );
 
+    // X scale
     const x = d3.scaleLinear()
         .domain([0, maxVal])
         .range([0, innerWidth]);
@@ -777,6 +807,7 @@ function renderSingleCompBar(containerId, operation) {
         .range([0, innerHeight])
         .padding(0.2);
 
+    // Draw bars
     g.selectAll("rect")
         .data(data)
         .enter()
@@ -787,6 +818,7 @@ function renderSingleCompBar(containerId, operation) {
         .attr("height", y.bandwidth())
         .attr("fill", d => d.color);
 
+    // Add labels
     g.selectAll(".label")
         .data(data)
         .enter()
@@ -799,6 +831,7 @@ function renderSingleCompBar(containerId, operation) {
         .attr("dominant-baseline", "middle")
         .text(d => d.label);
 
+    // Bar values
     g.selectAll(".value")
         .data(data)
         .enter()
@@ -811,7 +844,9 @@ function renderSingleCompBar(containerId, operation) {
         .text(d => d.value);
 }
 
+// Macro trends
 function renderAggregateTrends(data) {
+    // Clear out old charts
     d3.select("#trend-tech-chart").selectAll("*").remove();
     d3.select("#trend-targets-chart").selectAll("*").remove();
     d3.select("#trend-casualty-chart").selectAll("*").remove();
@@ -819,14 +854,17 @@ function renderAggregateTrends(data) {
     const chartCard = document.querySelector(".chart-card");
     if (!chartCard) return;
 
+    // Margins and dimensions
     const margin = { top: 20, right: 30, bottom: 30, left: 40 },
         width = chartCard.clientWidth - margin.left - margin.right,
         height = 250 - margin.top - margin.bottom;
 
+    // Group by year
     const nestedData = d3.nest()
         .key(d => d.Year)
         .entries(data);
 
+    // Group statistics per year
     const aggregatedData = nestedData.map(d => {
         const v = d.values;
         const totalOps = v.length;
@@ -837,12 +875,14 @@ function renderAggregateTrends(data) {
 
         const civCas = d3.sum(v, op => +op["Civilian casualties"] || 0);
         const totalCas = d3.sum(v, op => (+op["Side A casualties"] || 0) + (+op["Side B casualties"] || 0) + (+op["Civilian casualties"] || 0) + (+op["US casualties"] || 0));
+        
+        // Ratio of civilian casualties to total casualties
         const civRatio = totalCas > 0 ? civCas / totalCas : 0;
 
         return { year: +d.key, totalOps, stateOps, nonStateOps, drones, ground, civRatio };
-    }).filter(d => !isNaN(d.year)).sort((a, b) => d3.ascending(a.year, b.year));
+    }).filter(d => !isNaN(d.year)).sort((a, b) => d3.ascending(a.year, b.year)); // Clean up NaNs and sort chronologically
 
-    // Chart 1: Technological Shifts
+    // Chart 1 (Drones vs Ground Troops)
     const svgTech = d3.select("#trend-tech-chart")
         .append("svg")
         .attr("width", width + margin.left + margin.right)
@@ -850,12 +890,15 @@ function renderAggregateTrends(data) {
         .append("g")
         .attr("transform", `translate(${margin.left},${margin.top})`);
 
+    // X axis
     const x = d3.scaleLinear().domain(d3.extent(aggregatedData, d => d.year)).range([0, width]);
     svgTech.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x).tickFormat(d3.format("d")));
 
+    // Y axis
     const yTech = d3.scaleLinear().domain([0, d3.max(aggregatedData, d => Math.max(d.drones, d.ground))]).range([height, 0]);
     svgTech.append("g").call(d3.axisLeft(yTech));
 
+    // Drone line
     svgTech.append("path")
         .datum(aggregatedData)
         .attr("fill", "none")
@@ -863,6 +906,7 @@ function renderAggregateTrends(data) {
         .attr("stroke-width", 2)
         .attr("d", d3.line().x(d => x(d.year)).y(d => yTech(d.drones)));
 
+    // Ground troops line
     svgTech.append("path")
         .datum(aggregatedData)
         .attr("fill", "none")
@@ -870,6 +914,7 @@ function renderAggregateTrends(data) {
         .attr("stroke-width", 2)
         .attr("d", d3.line().x(d => x(d.year)).y(d => yTech(d.ground)));
 
+    // Legend
     svgTech.append("line")
         .attr("x1", 10)
         .attr("x2", 28)
@@ -901,7 +946,7 @@ function renderAggregateTrends(data) {
         .text("Ground troops");
 
 
-    // Chart 2: Target Shifts
+    // Chart 2: Target Shifts 
     const svgTargets = d3.select("#trend-targets-chart")
         .append("svg")
         .attr("width", width + margin.left + margin.right)
@@ -909,10 +954,13 @@ function renderAggregateTrends(data) {
         .append("g")
         .attr("transform", `translate(${margin.left},${margin.top})`);
 
+    // X axis 
     svgTargets.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x).tickFormat(d3.format("d")));
+    // Y axis 
     const yTargets = d3.scaleLinear().domain([0, d3.max(aggregatedData, d => Math.max(d.stateOps, d.nonStateOps))]).range([height, 0]);
     svgTargets.append("g").call(d3.axisLeft(yTargets));
 
+    // State targets line
     svgTargets.append("path")
         .datum(aggregatedData)
         .attr("fill", "none")
@@ -920,6 +968,7 @@ function renderAggregateTrends(data) {
         .attr("stroke-width", 2)
         .attr("d", d3.line().x(d => x(d.year)).y(d => yTargets(d.stateOps)));
 
+    // Non-state targets line
     svgTargets.append("path")
         .datum(aggregatedData)
         .attr("fill", "none")
@@ -927,12 +976,14 @@ function renderAggregateTrends(data) {
         .attr("stroke-width", 2)
         .attr("d", d3.line().x(d => x(d.year)).y(d => yTargets(d.nonStateOps)));
 
+    // 2001 line
     svgTargets.append("line")
         .attr("x1", x(2001)).attr("y1", 0)
         .attr("x2", x(2001)).attr("y2", height)
         .style("stroke-dasharray", "3, 3")
         .style("stroke", "white");
 
+    // Chart 2 legend
     svgTargets.append("line")
         .attr("x1", 10)
         .attr("x2", 28)
@@ -964,7 +1015,7 @@ function renderAggregateTrends(data) {
         .text("Non-State Targets");
 
 
-    // Chart 3: Human Cost
+    // Chart 3: Human Cost 
     const svgCas = d3.select("#trend-casualty-chart")
         .append("svg")
         .attr("width", width + margin.left + margin.right)
@@ -972,14 +1023,18 @@ function renderAggregateTrends(data) {
         .append("g")
         .attr("transform", `translate(${margin.left},${margin.top})`);
 
+    // X axis
     svgCas.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x).tickFormat(d3.format("d")));
 
+    // Left Y Axis
     const yCasLeft = d3.scaleLinear().domain([0, d3.max(aggregatedData, d => d.drones)]).range([height, 0]);
     svgCas.append("g").call(d3.axisLeft(yCasLeft));
 
+    // Right Y Axis 
     const yCasRight = d3.scaleLinear().domain([0, 1]).range([height, 0]);
     svgCas.append("g").attr("transform", `translate(${width},0)`).call(d3.axisRight(yCasRight).tickFormat(d3.format(".0%")));
 
+    // Bar chart for drone operations
     svgCas.selectAll("rect")
         .data(aggregatedData)
         .enter()
@@ -991,6 +1046,7 @@ function renderAggregateTrends(data) {
         .attr("fill", "#4292c6")
         .attr("opacity", 0.5);
 
+    // Civilian casualty rate
     svgCas.append("path")
         .datum(aggregatedData)
         .attr("fill", "none")
@@ -1002,6 +1058,7 @@ function renderAggregateTrends(data) {
             .y(d => yCasRight(d.civRatio))
         );
 
+    // Chart 3 chart
     svgCas.append("line")
         .attr("x1", 10)
         .attr("x2", 28)
@@ -1036,28 +1093,34 @@ function renderAggregateTrends(data) {
 
 }
 
+// Event Listener for multi-selection mode
 d3.select("#multi-select-btn").on("click", function () {
-    multiSelectOn = !multiSelectOn;
+    multiSelectOn = !multiSelectOn; // Toggle global state boolean
     if (multiSelectOn) {
+        // UI updates when multi-select is activated
         d3.select("#multi-select-btn").text("MULT_SELECT MODE").style("background-color", "green");
         d3.select("#multi-plots").style("display", "flex");
-        renderMultiSelectPlots(multiSelectedPoints);
-        d3.select("#deepdive-sidebar").style("display", "none");
+        renderMultiSelectPlots(multiSelectedPoints); // Render the multi-plot with currently selected points
+        d3.select("#deepdive-sidebar").style("display", "none"); // Hide single selection tools
     } else {
+        // UI updates when multi-select is deactivated
         d3.select("#multi-select-btn").text("MULT_SELECT MODE").style("background-color", "red");
-        multiSelectedPoints = []
+        multiSelectedPoints = [] // Clear selected array
         d3.select("#multi-plots").style("display", "none");
-        d3.select("#deepdive-sidebar").style("display", "block");
-        highlightSelected()
+        d3.select("#deepdive-sidebar").style("display", "block"); 
+        highlightSelected();
     }
 });
 
+// Mutliselect plots
 function renderMultiSelectPlots(data) {
 
     d3.select("#operation-profile-comparison").selectAll("*").remove();
 
+
     if (!data || data.length === 0) return;
 
+    // Dimensions/axes to plot
     const dimensions = [
         "Duration (days)",
         "Days into parent",
@@ -1085,6 +1148,7 @@ function renderMultiSelectPlots(data) {
     const g = svg.append("g")
         .attr("transform", `translate(${margin.left},${margin.top})`);
 
+    // X scale
     const x = d3.scalePoint()
         .domain(dimensions)
         .range([0, width])
@@ -1092,6 +1156,7 @@ function renderMultiSelectPlots(data) {
 
     const yScales = {};
 
+    // Linear scale
     dimensions.forEach(dim => {
         const maxVal = d3.max(data, d => +d[dim] || 0);
 
@@ -1101,9 +1166,11 @@ function renderMultiSelectPlots(data) {
             .range([height, 0]);
     });
 
+    // Color lines
     const color = d3.scaleOrdinal(d3.schemeTableau10)
         .domain(data.map(d => d.Operation));
 
+    // Conect paths
     function path(d) {
         return d3.line()(dimensions.map(dim => [
             x(dim),
@@ -1111,6 +1178,7 @@ function renderMultiSelectPlots(data) {
         ]));
     }
 
+    // Lines for each operation
     g.selectAll(".operation-line")
         .data(data)
         .enter()
@@ -1122,6 +1190,7 @@ function renderMultiSelectPlots(data) {
         .attr("stroke-width", 2)
         .attr("opacity", 0.7);
 
+    // Vertical Y axes
     dimensions.forEach(dim => {
         const axis = g.append("g")
             .attr("transform", `translate(${x(dim)},0)`)
@@ -1134,10 +1203,11 @@ function renderMultiSelectPlots(data) {
             .attr("font-family", "JetBrains Mono")
             .attr("fill", "black")
             .attr("font-size", "10px")
-            .attr("transform", `rotate(35, 0, ${height + 25})`)
+            .attr("transform", `rotate(35, 0, ${height + 25})`) // Rotate text slightly to prevent overlapping
             .text(dim);
     });
 
+    // Primary title
     svg.append("text")
         .attr("x", margin.left)
         .attr("y", 20)
