@@ -16,13 +16,17 @@ The project features an D3.js world map alongside a control dashboard. Users can
 
 ## Setup
 1. **Download the code**
-   - Clone repository: `git clone <repository-url>`
-   - OR download the ZIP file and extract it to a local folder
+2. Run
+```
+git clone https://github.com/yihli/ecs163-final-project.git
+cd ecs163-final-project
+```
+OR download the ZIP file and extract it to a local folder
      
 ---
 
 ## Execution
-1. Open project folder in VS Code
+1. Open project folder `ecs163-final-project` in VS Code
 2. Open `index.html` in code editor
 3. Make sure Live Server extension is installed for VSCode and select **"Open with Live Server"**
 4. A browser tab will be opened with the dashboard
